@@ -11,7 +11,7 @@ professional, like something an office would actually use. clean tables, numbers
 ## scaffold (done)
 - [x] project set up: client/ (react) + server/ (express) in one repo
 - [x] /api/health route so I know the server runs
-- [ ] dashboard shell: header, nav, the cards row — built to the mockup I approved
+- [x] dashboard shell: header, nav, the cards row — built to the mockup I approved
 
 ## database
 - [ ] sqlite tables: agents (name, split plan, yearly goal) and deals (agent, address, price, commission %, side, sold + closing dates, status, where the deal came from)

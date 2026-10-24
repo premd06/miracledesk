@@ -1,121 +1,78 @@
 import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
 import './App.css'
 
+// sample numbers only, for the shell. the real numbers come
+// once the api is built — these just hold the layout in place.
+const cards = [
+  { label: 'Net earned this year', value: '$142,300', note: 'from 18 closed deals' },
+  { label: 'Closing soon', value: '$38,900', note: '3 deals in the next 45 days' },
+  { label: 'Deals this year', value: '24', note: '18 closed, 6 still open' },
+  { label: 'Goal progress', value: '71%', note: '$142,300 of a $200,000 goal' },
+]
+
+const pages = ['Dashboard', 'Deals', 'Clients', 'Broker view']
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [page, setPage] = useState('Dashboard')
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="shell">
+      <header className="top">
+        <p className="logo">MiracleDesk</p>
+        <p className="top-note">Sample data</p>
+      </header>
 
-      <div className="ticks"></div>
+      <nav className="nav">
+        {pages.map((name) => (
+          <button
+            key={name}
+            type="button"
+            className={page === name ? 'active' : ''}
+            onClick={() => setPage(name)}
+          >
+            {name}
+          </button>
+        ))}
+      </nav>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <main>
+        <h1>{page}</h1>
+        <p className="intro">
+          Sample numbers for now — the real totals land here once the api is wired up.
+        </p>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {page === 'Dashboard' && (
+          <>
+            <section className="cards">
+              {cards.map((card) => (
+                <div className="card" key={card.label}>
+                  <p className="card-label">{card.label}</p>
+                  <p className="card-value">{card.value}</p>
+                  <p className="card-note">{card.note}</p>
+                  {card.label === 'Goal progress' && (
+                    <div className="goal-bar">
+                      <div className="goal-fill" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </section>
+
+            <section className="placeholder">
+              <h2>Deals</h2>
+              <p>The deals table goes here next.</p>
+            </section>
+          </>
+        )}
+
+        {page !== 'Dashboard' && (
+          <section className="placeholder">
+            <h2>{page}</h2>
+            <p>Coming in a later step.</p>
+          </section>
+        )}
+      </main>
+    </div>
   )
 }
 
