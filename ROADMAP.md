@@ -1,6 +1,6 @@
 # stuff I'm building, in order
 
-one thing per session, small commits. this is a demo with sample data — no real deals, ever.
+one feature per session, finished properly. keep the code simple — if I can't explain a line, it's too much. this is a demo with sample data — no real deals, ever.
 
 the idea got bigger than "commission dashboard" on purpose (oct 24): it's the agent's whole desk at the brokerage — money, clients, follow-ups, calendar, the lot. commissions are the core, everything else hangs off the same deal data.
 
