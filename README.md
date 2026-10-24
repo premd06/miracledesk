@@ -1,6 +1,6 @@
-# commission dashboard
+# miracledesk
 
-a dashboard I'm building for the realtors at my brokerage (HomeLife/Miracle Realty, in the GTA) to track their deals and commissions. right now, if you want to know what you've actually made this year, you're digging through closing paperwork or a spreadsheet somebody made in 2015. this puts it on one page.
+a dashboard I'm building for the realtors at my brokerage (HomeLife/Miracle Realty, in the GTA) to track their deals and commissions. right now, if you want to know what you've actually made this year, you're digging through closing paperwork or a spreadsheet somebody made in 2015. this puts it on one page. I called it MiracleDesk — the agents' desk at Miracle.
 
 heads up: everything in here runs on **sample data** — fake agents, fake deals, fake addresses. it's a demo of how the system would work. real client info would never go in a public repo.
 
