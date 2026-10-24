@@ -6,7 +6,7 @@ the idea got bigger than "commission dashboard" on purpose (oct 24): it's the ag
 
 ## how I want it to look
 
-professional, like something an office would actually use. clean tables, numbers big and easy to read. agents check this on their phones between showings, so mobile matters. theme picked (oct 24): **cream + gold luxury** — warm cream background, black text, gold accents, serif headings for the big numbers. same family as my davehomes.ca site, so the site and the app look like one brand. dark mode toggle included.
+professional, like something an office would actually use. clean tables, numbers big and easy to read. agents check this on their phones between showings, so mobile matters. theme picked (oct 24): **light sage green, bank style** — white and light grey background, soft eucalyptus green for the chart and accents, dark slate text, one clean sans font for everything, hairline dividers instead of boxes everywhere, big calm numbers, lots of empty space. like a bank app — not crowded, nothing flashy. dark mode toggle included.
 
 ## scaffold (done)
 - [x] project set up: client/ (react) + server/ (express) in one repo
