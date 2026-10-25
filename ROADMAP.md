@@ -14,7 +14,7 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] dashboard shell: header, nav, the cards row — built to the mockup I approved
 
 ## database
-- [ ] sqlite tables: agents (name, split plan, yearly goal) and deals (agent, address, price, commission %, side, sold + closing dates, status, where the deal came from)
+- [x] sqlite tables: agents (name, split plan, yearly goal) and deals (agent, address, price, commission %, side, sold + closing dates, status, where the deal came from)
 - [ ] seed script with sample data — a few fake agents, ~15 fake deals spread over the year so the charts have something to show
 
 ## the money math (own piece, with tests)
