@@ -15,11 +15,11 @@ professional, like something an office would actually use. clean tables, numbers
 
 ## database
 - [x] sqlite tables: agents (name, split plan, yearly goal) and deals (agent, address, price, commission %, side, sold + closing dates, status, where the deal came from)
-- [ ] seed script with sample data — a few fake agents, ~15 fake deals spread over the year so the charts have something to show
+- [x] seed script with sample data — a few fake agents, ~15 fake deals spread over the year so the charts have something to show
 
 ## the money math (own piece, with tests)
-- [ ] commission.js — one function that does the whole calculation: gross, referral fee off the top if there is one, the split (flat or tiered), HST, agent's net
-- [ ] unit tests for it. money math is the one part I refuse to get wrong
+- [x] commission.js — one function that does the whole calculation: gross, referral fee off the top if there is one, the split (flat or tiered), HST, agent's net
+- [x] unit tests for it. money math is the one part I refuse to get wrong
 
 ## api
 - [ ] GET /api/deals — all deals, or one agent's with ?agentId=
