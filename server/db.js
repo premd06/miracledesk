@@ -24,6 +24,7 @@ db.exec(`
     closing_date TEXT,
     status TEXT NOT NULL,
     source TEXT,
+    referral_pct REAL DEFAULT 0,
     FOREIGN KEY (agent_id) REFERENCES agents (id)
   );
 `)
