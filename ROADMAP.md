@@ -22,9 +22,9 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] unit tests for it. money math is the one part I refuse to get wrong
 
 ## api
-- [ ] GET /api/deals — all deals, or one agent's with ?agentId=
-- [ ] GET /api/summary — the numbers for the cards (made this year, closing soon, deal count, goal progress)
-- [ ] GET /api/leaderboard — every agent's totals for the broker view
+- [x] GET /api/deals — all deals, or one agent's with ?agentId=
+- [x] GET /api/summary — the numbers for the cards (made this year, closing soon, deal count, goal progress)
+- [x] GET /api/leaderboard — every agent's totals for the broker view
 - [ ] POST /api/deals — add a deal
 
 ## frontend
