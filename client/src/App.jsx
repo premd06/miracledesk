@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import DealsTable from './DealsTable'
 
 // sample numbers only, for the shell. the real numbers come
 // once the api is built — these just hold the layout in place.
@@ -58,14 +59,20 @@ function App() {
               ))}
             </section>
 
-            <section className="placeholder">
+            <section className="deals-section">
               <h2>Deals</h2>
-              <p>The deals table goes here next.</p>
+              <DealsTable />
             </section>
           </>
         )}
 
-        {page !== 'Dashboard' && (
+        {page === 'Deals' && (
+          <section className="deals-section">
+            <DealsTable />
+          </section>
+        )}
+
+        {page !== 'Dashboard' && page !== 'Deals' && (
           <section className="placeholder">
             <h2>{page}</h2>
             <p>Coming in a later step.</p>

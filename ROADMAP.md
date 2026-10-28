@@ -28,7 +28,7 @@ professional, like something an office would actually use. clean tables, numbers
 - [ ] POST /api/deals — add a deal
 
 ## frontend
-- [ ] deals table loaded from the api (status shown as little coloured labels)
+- [x] deals table loaded from the api (status shown as little coloured labels)
 - [ ] summary cards wired to /api/summary, goal progress bar included
 - [ ] add-a-deal form that posts to the api and shows up in the table
 - [ ] monthly earnings chart (recharts — same as my seo dashboard)
