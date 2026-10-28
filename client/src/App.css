@@ -18,6 +18,17 @@
   color: var(--sage);
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-mark {
+  height: 30px;
+  width: auto;
+}
+
 .top-note {
   font-size: 14px;
   color: var(--muted);

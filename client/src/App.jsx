@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import DealsTable from './DealsTable'
+import logoMark from './assets/logo-mark.webp'
 
 // sample numbers only, for the shell. the real numbers come
 // once the api is built — these just hold the layout in place.
@@ -19,7 +20,10 @@ function App() {
   return (
     <div className="shell">
       <header className="top">
-        <p className="logo">MiracleDesk</p>
+        <div className="brand">
+          <img className="logo-mark" src={logoMark} alt="" />
+          <p className="logo">MiracleDesk</p>
+        </div>
         <p className="top-note">Sample data</p>
       </header>
 
