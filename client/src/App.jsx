@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import AddDealForm from './AddDealForm'
 import DealsTable from './DealsTable'
 import SummaryCards from './SummaryCards'
 import logoMark from './assets/logo-mark.webp'
@@ -8,6 +9,8 @@ const pages = ['Dashboard', 'Deals', 'Clients', 'Broker view']
 
 function App() {
   const [page, setPage] = useState('Dashboard')
+  // bumped every time a deal is saved, so the table reloads
+  const [dealsVersion, setDealsVersion] = useState(0)
 
   return (
     <div className="shell">
@@ -47,9 +50,12 @@ function App() {
         )}
 
         {page === 'Deals' && (
-          <section className="deals-section">
-            <DealsTable />
-          </section>
+          <>
+            <AddDealForm onAdded={() => setDealsVersion((v) => v + 1)} />
+            <section className="deals-section">
+              <DealsTable refreshKey={dealsVersion} />
+            </section>
+          </>
         )}
 
         {page !== 'Dashboard' && page !== 'Deals' && (

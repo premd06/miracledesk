@@ -235,3 +235,62 @@ main {
     overflow-x: auto;
   }
 }
+
+.deal-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 24px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+}
+
+.deal-form h2 {
+  grid-column: 1 / -1;
+}
+
+.deal-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.deal-form input,
+.deal-form select {
+  font: inherit;
+  color: var(--text);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.deal-form button {
+  grid-column: 1 / -1;
+  justify-self: start;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--sage);
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 24px;
+  cursor: pointer;
+}
+
+.form-error {
+  grid-column: 1 / -1;
+  color: #a33;
+}
+
+.form-saved {
+  grid-column: 1 / -1;
+  color: var(--sage);
+}
+
+@media (max-width: 640px) {
+  .deal-form {
+    grid-template-columns: 1fr;
+  }
+}

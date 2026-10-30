@@ -125,9 +125,67 @@ app.get('/api/leaderboard', (req, res) => {
   res.json(rows)
 })
 
+// the agents, for the add-a-deal form's dropdown.
+app.get('/api/agents', (req, res) => {
+  res.json(db.prepare('SELECT id, name FROM agents ORDER BY name').all())
+})
+
 app.get('/api/deals', (req, res) => {
   const agentId = req.query.agentId ? Number(req.query.agentId) : null
   res.json(dealsWithMath(agentId))
+})
+
+// add a deal. the agent has to exist, and the basics (address, price,
+// commission %, side, status) have to be there — everything else can be
+// filled in later. returns the new deal with its math worked out, so the
+// form can show the net right away.
+app.post('/api/deals', (req, res) => {
+  const body = req.body || {}
+  const agentId = Number(body.agent_id)
+  const price = Number(body.price)
+  const commissionPct = Number(body.commission_pct)
+
+  if (!body.address || !body.side || !body.status) {
+    return res
+      .status(400)
+      .json({ error: 'address, side and status are required' })
+  }
+  if (!agentId || !price || price <= 0 || !commissionPct || commissionPct <= 0) {
+    return res
+      .status(400)
+      .json({ error: 'a valid agent, price and commission % are required' })
+  }
+  const agent = db
+    .prepare('SELECT * FROM agents WHERE id = ?')
+    .get(agentId)
+  if (!agent) {
+    return res.status(400).json({ error: 'no agent with that id' })
+  }
+
+  const result = db
+    .prepare(
+      `INSERT INTO deals
+       (agent_id, address, price, commission_pct, side, sold_date,
+        closing_date, status, source, referral_pct)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .run(
+      agentId,
+      body.address,
+      price,
+      commissionPct,
+      body.side,
+      body.sold_date || null,
+      body.closing_date || null,
+      body.status,
+      body.source || null,
+      Number(body.referral_pct) || 0
+    )
+
+  // run the whole list through the math so a tiered split counts the
+  // deals before this one, then pick the new deal out of it.
+  const created = dealsWithMath().find((deal) => deal.id === result.lastInsertRowid)
+  res.status(201).json(created)
 })
 
 function round(n) {

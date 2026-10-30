@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 // pulls the deals from the api and shows them as a table.
 // if the server isn't running, it says so plainly instead of
 // showing an empty table and leaving you guessing.
-function DealsTable() {
+// refreshKey changes when a new deal is added, so the table reloads.
+function DealsTable({ refreshKey }) {
   const [deals, setDeals] = useState([])
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
@@ -19,7 +20,7 @@ function DealsTable() {
         setFailed(true)
         setLoading(false)
       })
-  }, [])
+  }, [refreshKey])
 
   if (loading) {
     return <p className="table-note">Loading deals…</p>

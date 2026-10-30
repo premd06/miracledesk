@@ -25,12 +25,12 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] GET /api/deals — all deals, or one agent's with ?agentId=
 - [x] GET /api/summary — the numbers for the cards (made this year, closing soon, deal count, goal progress)
 - [x] GET /api/leaderboard — every agent's totals for the broker view
-- [ ] POST /api/deals — add a deal
+- [x] POST /api/deals — add a deal
 
 ## frontend
 - [x] deals table loaded from the api (status shown as little coloured labels)
 - [x] summary cards wired to /api/summary, goal progress bar included
-- [ ] add-a-deal form that posts to the api and shows up in the table
+- [x] add-a-deal form that posts to the api and shows up in the table
 - [ ] monthly earnings chart (recharts — same as my seo dashboard)
 
 ## broker view
