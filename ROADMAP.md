@@ -34,9 +34,9 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] monthly earnings chart (recharts — same as my seo dashboard)
 
 ## broker view
-- [ ] office page: every agent's totals + office total
-- [ ] leaderboard (most net earned this year on top)
-- [ ] what's closing this month
+- [x] office page: every agent's totals + office total
+- [x] leaderboard (most net earned this year on top)
+- [x] what's closing this month
 - [ ] export a pay-period summary as csv — the feature that would make an office actually use this
 
 ## look & feel pass

@@ -4,6 +4,7 @@ import AddDealForm from './AddDealForm'
 import DealsTable from './DealsTable'
 import MonthlyChart from './MonthlyChart'
 import RecentDeals from './RecentDeals'
+import BrokerView from './BrokerView'
 import SummaryCards from './SummaryCards'
 import logoMark from './assets/logo-mark.webp'
 
@@ -65,7 +66,9 @@ function App() {
           </>
         )}
 
-        {page !== 'Dashboard' && page !== 'Deals' && (
+        {page === 'Broker view' && <BrokerView />}
+
+        {page !== 'Dashboard' && page !== 'Deals' && page !== 'Broker view' && (
           <section className="placeholder">
             <h2>{page}</h2>
             <p>Coming in a later step.</p>
