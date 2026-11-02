@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
-  Bar,
-  BarChart,
+  Area,
+  AreaChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -9,9 +9,9 @@ import {
   YAxis,
 } from 'recharts'
 
-// pulls the per-month totals from /api/monthly and draws them as bars.
-// same deal as the other components: if the server isn't running, it
-// says so instead of showing an empty chart.
+// pulls the per-month totals from /api/monthly and draws them as a
+// smooth area chart. same deal as the other components: if the
+// server isn't running, it says so instead of showing an empty chart.
 function money(n) {
   return '$' + Math.round(n).toLocaleString()
 }
@@ -54,7 +54,7 @@ function MonthlyChart() {
   return (
     <div className="chart-wrap">
       <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={months}>
+        <AreaChart data={months}>
           <CartesianGrid stroke="#e2e6e2" vertical={false} />
           <XAxis dataKey="month" tick={{ fill: '#6b7a72', fontSize: 14 }} />
           <YAxis
@@ -63,8 +63,14 @@ function MonthlyChart() {
             width={60}
           />
           <Tooltip formatter={(value) => money(value)} />
-          <Bar dataKey="net" fill="#5f7f6e" />
-        </BarChart>
+          <Area
+            type="monotone"
+            dataKey="net"
+            stroke="#5f7f6e"
+            fill="#5f7f6e"
+            fillOpacity={0.3}
+          />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   )

@@ -38,9 +38,6 @@ function SummaryCards() {
     )
   }
 
-  // the bar shouldn't run past the end even if the goal is beaten
-  const barWidth = Math.min(summary.goalProgress, 100)
-
   const cards = [
     {
       label: 'Net earned this year',
@@ -71,11 +68,6 @@ function SummaryCards() {
           <p className="card-label">{card.label}</p>
           <p className="card-value">{card.value}</p>
           <p className="card-note">{card.note}</p>
-          {card.label === 'Goal progress' && (
-            <div className="goal-bar">
-              <div className="goal-fill" style={{ width: barWidth + '%' }} />
-            </div>
-          )}
         </div>
       ))}
     </section>

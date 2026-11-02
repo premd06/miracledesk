@@ -1,15 +1,13 @@
-.shell {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 0 24px 64px;
+.layout {
+  display: flex;
+  min-height: 100svh;
 }
 
-.top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px 0;
-  border-bottom: 1px solid var(--line);
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--grey);
+  padding: 24px;
 }
 
 .logo {
@@ -32,69 +30,61 @@
 .top-note {
   font-size: 14px;
   color: var(--muted);
+  margin-top: 8px;
 }
 
 .nav {
   display: flex;
-  gap: 8px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
-  overflow-x: auto;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 32px;
 }
 
 .nav button {
   border: 0;
   background: none;
-  color: var(--muted);
-  padding: 8px 12px;
+  color: var(--text);
+  padding: 10px 12px;
   cursor: pointer;
-  white-space: nowrap;
+  text-align: left;
+  font-size: 17px;
 }
 
 .nav button.active {
-  color: var(--text);
+  color: var(--sage);
   font-weight: 600;
-  border-bottom: 2px solid var(--sage);
 }
 
 main {
-  padding-top: 40px;
+  flex: 1;
+  min-width: 0;
+  padding: 40px 48px 64px;
 }
 
-.intro {
-  color: var(--muted);
-  margin-top: 8px;
+main h1 {
+  font-size: 48px;
+  font-weight: 700;
 }
 
 .cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
   margin-top: 40px;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-
-.card {
-  padding: 24px 24px 24px 0;
-  margin-right: 24px;
-  border-right: 1px solid var(--line);
-}
-
-.card:last-child {
-  margin-right: 0;
-  border-right: 0;
-  padding-right: 0;
 }
 
 .card-label {
-  font-size: 14px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
 .card-value {
-  font-size: 36px;
-  font-weight: 600;
+  font-size: 48px;
+  font-weight: 700;
   margin-top: 8px;
+  white-space: nowrap;
 }
 
 .card-note {
@@ -103,15 +93,46 @@ main {
   margin-top: 4px;
 }
 
-.goal-bar {
-  height: 6px;
-  background: var(--sage-light);
+.deals-section {
+  margin-top: 56px;
+}
+
+.section-label {
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.chart-wrap {
+  margin-top: 8px;
+}
+
+.table-note {
+  color: var(--muted);
   margin-top: 16px;
 }
 
-.goal-fill {
-  height: 100%;
-  background: var(--sage);
+.recent-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.recent-address {
+  flex: 1;
+}
+
+.recent-status {
+  color: var(--muted);
+}
+
+.recent-price {
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .placeholder {
@@ -123,74 +144,6 @@ main {
 .placeholder p {
   color: var(--muted);
   margin-top: 8px;
-}
-
-@media (max-width: 800px) {
-  .shell {
-    padding: 0 16px 48px;
-  }
-
-  .cards {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .card {
-    padding: 20px 16px 20px 0;
-    margin-right: 16px;
-  }
-
-  .card:nth-child(2) {
-    margin-right: 0;
-    border-right: 0;
-    padding-right: 0;
-  }
-
-  .card:nth-child(3),
-  .card:nth-child(4) {
-    border-top: 1px solid var(--line);
-  }
-}
-
-@media (max-width: 480px) {
-  .cards {
-    grid-template-columns: 1fr;
-  }
-
-  .card {
-    margin-right: 0;
-    padding-right: 0;
-    border-right: 0;
-    border-top: 1px solid var(--line);
-  }
-
-  .card:first-child {
-    border-top: 0;
-  }
-
-  .card:nth-child(2) {
-    border-top: 1px solid var(--line);
-  }
-
-  .card-value {
-    font-size: 30px;
-  }
-}
-
-.deals-section {
-  margin-top: 48px;
-}
-
-.deals-section h2 {
-  margin-bottom: 16px;
-}
-
-.chart-wrap {
-  margin-top: 8px;
-}
-
-.table-note {
-  color: var(--muted);
-  margin-top: 16px;
 }
 
 .deals-table {
@@ -291,6 +244,49 @@ main {
 .form-saved {
   grid-column: 1 / -1;
   color: var(--sage);
+}
+
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: auto;
+    padding: 16px;
+  }
+
+  .nav {
+    flex-direction: row;
+    margin-top: 16px;
+    overflow-x: auto;
+  }
+
+  .nav button {
+    white-space: nowrap;
+  }
+
+  main {
+    padding: 24px 16px 48px;
+  }
+
+  main h1 {
+    font-size: 36px;
+  }
+
+  .cards {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .card-value {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {

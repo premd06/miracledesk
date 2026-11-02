@@ -3,6 +3,7 @@ import './App.css'
 import AddDealForm from './AddDealForm'
 import DealsTable from './DealsTable'
 import MonthlyChart from './MonthlyChart'
+import RecentDeals from './RecentDeals'
 import SummaryCards from './SummaryCards'
 import logoMark from './assets/logo-mark.webp'
 
@@ -14,27 +15,27 @@ function App() {
   const [dealsVersion, setDealsVersion] = useState(0)
 
   return (
-    <div className="shell">
-      <header className="top">
+    <div className="layout">
+      <aside className="sidebar">
         <div className="brand">
           <img className="logo-mark" src={logoMark} alt="" />
           <p className="logo">MiracleDesk</p>
         </div>
         <p className="top-note">Sample data</p>
-      </header>
 
-      <nav className="nav">
-        {pages.map((name) => (
-          <button
-            key={name}
-            type="button"
-            className={page === name ? 'active' : ''}
-            onClick={() => setPage(name)}
-          >
-            {name}
-          </button>
-        ))}
-      </nav>
+        <nav className="nav">
+          {pages.map((name) => (
+            <button
+              key={name}
+              type="button"
+              className={page === name ? 'active' : ''}
+              onClick={() => setPage(name)}
+            >
+              {name}
+            </button>
+          ))}
+        </nav>
+      </aside>
 
       <main>
         <h1>{page}</h1>
@@ -44,13 +45,13 @@ function App() {
             <SummaryCards />
 
             <section className="deals-section">
-              <h2>Net earned by month</h2>
+              <p className="section-label">Net earned by month</p>
               <MonthlyChart />
             </section>
 
             <section className="deals-section">
-              <h2>Deals</h2>
-              <DealsTable />
+              <p className="section-label">Recent deals</p>
+              <RecentDeals />
             </section>
           </>
         )}
