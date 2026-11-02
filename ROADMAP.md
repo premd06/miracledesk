@@ -31,7 +31,7 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] deals table loaded from the api (status shown as little coloured labels)
 - [x] summary cards wired to /api/summary, goal progress bar included
 - [x] add-a-deal form that posts to the api and shows up in the table
-- [ ] monthly earnings chart (recharts — same as my seo dashboard)
+- [x] monthly earnings chart (recharts — same as my seo dashboard)
 
 ## broker view
 - [ ] office page: every agent's totals + office total

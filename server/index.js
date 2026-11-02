@@ -92,6 +92,32 @@ app.get('/api/summary', (req, res) => {
   })
 })
 
+// net earned per month, for the chart on the dashboard. only closed
+// deals count, and only this year's — so the chart shows how the year
+// actually went, month by month. months with no closings still show up
+// as zero, otherwise the chart would have gaps in it.
+app.get('/api/monthly', (req, res) => {
+  const agentId = req.query.agentId ? Number(req.query.agentId) : null
+  const deals = dealsWithMath(agentId)
+
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ]
+  const totals = months.map((month) => ({ month, net: 0 }))
+
+  deals
+    .filter((deal) => deal.status === 'closed' && thisYear(deal))
+    .forEach((deal) => {
+      const monthIndex = Number(deal.closing_date.slice(5, 7)) - 1
+      if (monthIndex >= 0 && monthIndex < 12) {
+        totals[monthIndex].net += deal.net
+      }
+    })
+
+  res.json(totals.map((row) => ({ ...row, net: round(row.net) })))
+})
+
 // every agent ranked by net earned this year, most on top — this is what
 // the broker view will show.
 app.get('/api/leaderboard', (req, res) => {

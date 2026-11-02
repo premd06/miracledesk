@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import AddDealForm from './AddDealForm'
 import DealsTable from './DealsTable'
+import MonthlyChart from './MonthlyChart'
 import SummaryCards from './SummaryCards'
 import logoMark from './assets/logo-mark.webp'
 
@@ -41,6 +42,11 @@ function App() {
         {page === 'Dashboard' && (
           <>
             <SummaryCards />
+
+            <section className="deals-section">
+              <h2>Net earned by month</h2>
+              <MonthlyChart />
+            </section>
 
             <section className="deals-section">
               <h2>Deals</h2>
