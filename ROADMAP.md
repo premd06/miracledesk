@@ -41,7 +41,7 @@ professional, like something an office would actually use. clean tables, numbers
 
 ## look & feel pass
 - [ ] apply the theme I picked (from the mockups) across the whole app with css variables
-- [ ] dark mode toggle, saved so it sticks between visits
+- [x] dark mode toggle, saved so it sticks between visits
 
 ## the extras (picked oct 24)
 - [x] tax + HST set-aside card: HST collected so far + a rough "keep this much aside for taxes" number

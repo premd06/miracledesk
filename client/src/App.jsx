@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import AddDealForm from './AddDealForm'
 import DealsTable from './DealsTable'
@@ -14,6 +14,16 @@ function App() {
   const [page, setPage] = useState('Dashboard')
   // bumped every time a deal is saved, so the table reloads
   const [dealsVersion, setDealsVersion] = useState(0)
+  // dark mode, saved so it sticks between visits
+  const [dark, setDark] = useState(
+    () => localStorage.getItem('miracledesk-theme') === 'dark',
+  )
+
+  useEffect(() => {
+    const theme = dark ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('miracledesk-theme', theme)
+  }, [dark])
 
   return (
     <div className="layout">
@@ -36,6 +46,14 @@ function App() {
             </button>
           ))}
         </nav>
+
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={() => setDark((d) => !d)}
+        >
+          {dark ? 'Light mode' : 'Dark mode'}
+        </button>
       </aside>
 
       <main>

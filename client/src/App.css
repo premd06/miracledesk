@@ -55,6 +55,33 @@
   font-weight: 600;
 }
 
+.theme-toggle {
+  margin-top: 32px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+/* the coloured status pills are light-mode colours — give them
+   darker backgrounds so they still read on the dark background. */
+[data-theme='dark'] .status-pending {
+  background: #3d3320;
+  color: #e8c87a;
+}
+
+[data-theme='dark'] .status-conditional {
+  background: #2b3a4d;
+  color: #a8c2dd;
+}
+
+[data-theme='dark'] .form-error {
+  color: #e88;
+}
+
 main {
   flex: 1;
   min-width: 0;
@@ -107,6 +134,16 @@ main h1 {
 
 .chart-wrap {
   margin-top: 8px;
+}
+
+/* the chart sets its own colours, so point it at the theme variables
+   instead — that way it follows dark mode too. */
+.recharts-cartesian-axis-tick text {
+  fill: var(--muted);
+}
+
+.recharts-cartesian-grid line {
+  stroke: var(--line);
 }
 
 .table-note {

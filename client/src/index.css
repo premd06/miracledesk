@@ -14,6 +14,20 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* dark mode stays in the same family — deep green instead of white,
+   so it still looks like the same app at night. */
+[data-theme='dark'] {
+  --bg: #1c2a24;
+  --grey: #24352d;
+  --sage: #9dbfae;
+  --sage-light: #2c4036;
+  --text: #e9efeb;
+  --muted: #9aada3;
+  --line: #35483f;
+
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
 }
