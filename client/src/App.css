@@ -236,6 +236,42 @@ main h1 {
   cursor: pointer;
 }
 
+/* the pay-period export row in the broker view — same look as the
+   add-a-deal form, just a single row with two dates and a link. */
+.export-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.export-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.export-row input {
+  font: inherit;
+  color: var(--text);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.export-row a {
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--sage);
+  border-radius: 6px;
+  padding: 10px 24px;
+  text-decoration: none;
+}
+
 .form-error {
   grid-column: 1 / -1;
   color: #a33;

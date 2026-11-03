@@ -12,6 +12,8 @@ function BrokerView() {
   const [summary, setSummary] = useState(null)
   const [deals, setDeals] = useState(null)
   const [failed, setFailed] = useState(false)
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
   useEffect(() => {
     Promise.all([
@@ -48,6 +50,14 @@ function BrokerView() {
     deal.closing_date.startsWith(thisMonth)
   )
 
+  // the export link: blank dates mean the whole list, same as the api.
+  const exportParams = new URLSearchParams()
+  if (from) exportParams.set('from', from)
+  if (to) exportParams.set('to', to)
+  const exportQuery = exportParams.toString()
+  const exportHref =
+    '/api/export/payperiod' + (exportQuery ? '?' + exportQuery : '')
+
   return (
     <>
       <section className="cards">
@@ -69,6 +79,35 @@ function BrokerView() {
           <p className="card-label">Agents</p>
           <p className="card-value">{leaders.length}</p>
           <p className="card-note">on the leaderboard</p>
+        </div>
+      </section>
+
+      <section className="deals-section">
+        <p className="section-label">Pay-period export</p>
+        <p className="table-note">
+          Pick a closing-date range (or leave both blank for everything)
+          and download it as a spreadsheet.
+        </p>
+        <div className="export-row">
+          <label>
+            From
+            <input
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
+          </label>
+          <label>
+            To
+            <input
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            />
+          </label>
+          <a href={exportHref} download>
+            Download CSV
+          </a>
         </div>
       </section>
 

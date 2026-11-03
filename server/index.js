@@ -81,6 +81,17 @@ app.get('/api/summary', (req, res) => {
     : db.prepare('SELECT * FROM agents').all()
   const goal = agents.reduce((sum, agent) => sum + agent.yearly_goal, 0)
 
+  // HST I charged on this year's closed deals — it gets remitted, so I
+  // want to see it separately from what I actually keep. the set-aside
+  // is just a rough rule of thumb (25% of net) so I don't spend money
+  // I'll owe at tax time — it's not tax advice, my accountant has the
+  // real number.
+  const hstCollected = closedThisYear.reduce(
+    (sum, deal) => sum + deal.hst,
+    0
+  )
+  const taxSetAside = netThisYear * 0.25
+
   res.json({
     netThisYear: round(netThisYear),
     dealCount: deals.length,
@@ -89,6 +100,8 @@ app.get('/api/summary', (req, res) => {
     closingSoonNet: round(closingSoonNet),
     goal,
     goalProgress: goal ? round((netThisYear / goal) * 100) : 0,
+    hstCollected: round(hstCollected),
+    taxSetAside: round(taxSetAside),
   })
 })
 
@@ -155,6 +168,70 @@ app.get('/api/leaderboard', (req, res) => {
 app.get('/api/agents', (req, res) => {
   res.json(db.prepare('SELECT id, name FROM agents ORDER BY name').all())
 })
+
+// a pay-period export: every deal that closed in the date range, as
+// a csv the office can open in a spreadsheet. leave from/to off and
+// you get everything. ?agentId= narrows it to one agent.
+app.get('/api/export/payperiod', (req, res) => {
+  const agentId = req.query.agentId ? Number(req.query.agentId) : null
+  const from = req.query.from || ''
+  const to = req.query.to || ''
+
+  let deals = dealsWithMath(agentId)
+  if (from) {
+    deals = deals.filter((deal) => deal.closing_date >= from)
+  }
+  if (to) {
+    deals = deals.filter((deal) => deal.closing_date <= to)
+  }
+
+  const columns = [
+    'agent',
+    'address',
+    'price',
+    'side',
+    'status',
+    'closing_date',
+    'gross',
+    'referral',
+    'agent_share',
+    'hst',
+    'net',
+  ]
+  const rows = deals.map((deal) => [
+    deal.agent_name,
+    deal.address,
+    deal.price,
+    deal.side,
+    deal.status,
+    deal.closing_date,
+    deal.gross,
+    deal.referral,
+    deal.agentShare,
+    deal.hst,
+    deal.net,
+  ])
+  const csv = [columns, ...rows]
+    .map((row) => row.map((value) => csvCell(value)).join(','))
+    .join('\n')
+
+  res.setHeader('Content-Type', 'text/csv')
+  res.setHeader(
+    'Content-Disposition',
+    'attachment; filename="payperiod.csv"'
+  )
+  res.send(csv)
+})
+
+// one csv cell: wrap it in quotes if it has a comma, quote or newline
+// in it, and double up any quotes inside.
+function csvCell(value) {
+  const text = value === null || value === undefined ? '' : String(value)
+  if (/[",\n]/.test(text)) {
+    return '"' + text.replace(/"/g, '""') + '"'
+  }
+  return text
+}
 
 app.get('/api/deals', (req, res) => {
   const agentId = req.query.agentId ? Number(req.query.agentId) : null

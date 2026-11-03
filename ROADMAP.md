@@ -37,14 +37,14 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] office page: every agent's totals + office total
 - [x] leaderboard (most net earned this year on top)
 - [x] what's closing this month
-- [ ] export a pay-period summary as csv — the feature that would make an office actually use this
+- [x] export a pay-period summary as csv — the feature that would make an office actually use this
 
 ## look & feel pass
 - [ ] apply the theme I picked (from the mockups) across the whole app with css variables
 - [ ] dark mode toggle, saved so it sticks between visits
 
 ## the extras (picked oct 24)
-- [ ] tax + HST set-aside card: HST collected so far + a rough "keep this much aside for taxes" number
+- [x] tax + HST set-aside card: HST collected so far + a rough "keep this much aside for taxes" number
 - [ ] closing checklist on each deal: deposit in, conditions waived, lawyer has the docs, keys ready — so nothing falls through before closing day
 - [ ] clients: a list of each agent's buyers/sellers with a status and last-contacted date (own table + api + page)
 - [ ] follow-up nudges: "you haven't talked to this client in 14 days" + closing anniversaries ("1 year since they closed — send a text")
