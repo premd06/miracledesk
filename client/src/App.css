@@ -208,6 +208,31 @@ main h1 {
   font-size: 13px;
 }
 
+/* deal rows open their closing checklist on click */
+.deal-row {
+  cursor: pointer;
+}
+
+.checklist-row td {
+  padding: 16px 0 20px 0;
+}
+
+.checklist-title {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0 0 10px 0;
+}
+
+.checklist-item {
+  display: block;
+  margin: 6px 0;
+  cursor: pointer;
+}
+
+.checklist-item input {
+  margin-right: 10px;
+}
+
 .status-closed {
   background: var(--sage-light);
   color: var(--sage);

@@ -1,6 +1,7 @@
-// the database for miracledesk — just two tables for now.
-// agents hold each realtor, deals hold their sales. the seed script
-// (coming next) fills these with sample data, nothing real.
+// the database for miracledesk — agents, deals, and a checklist
+// per deal. agents hold each realtor, deals hold their sales, and
+// checklist items track what still has to happen before a deal closes.
+// the seed script fills the first two with sample data, nothing real.
 const { DatabaseSync } = require('node:sqlite')
 const path = require('path')
 
@@ -26,6 +27,14 @@ db.exec(`
     source TEXT,
     referral_pct REAL DEFAULT 0,
     FOREIGN KEY (agent_id) REFERENCES agents (id)
+  );
+  CREATE TABLE IF NOT EXISTS checklist_items (
+    id INTEGER PRIMARY KEY,
+    deal_id INTEGER NOT NULL,
+    label TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0,
+    UNIQUE (deal_id, label),
+    FOREIGN KEY (deal_id) REFERENCES deals (id)
   );
 `)
 

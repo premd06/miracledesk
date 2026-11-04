@@ -233,6 +233,60 @@ function csvCell(value) {
   return text
 }
 
+// the closing checklist for one deal. the four steps are the same for
+// every deal, so the first time anyone opens a deal's checklist I
+// create them all unticked — after that it's just reading the rows.
+// ticking a box is a PATCH with { done: true/false } on that item.
+const CHECKLIST_STEPS = [
+  'Deposit received',
+  'Conditions waived',
+  'Lawyer docs sent',
+  'Keys ready',
+]
+
+function checklistFor(dealId) {
+  const existing = db
+    .prepare('SELECT * FROM checklist_items WHERE deal_id = ? ORDER BY id')
+    .all(dealId)
+  if (existing.length === 0) {
+    const insert = db.prepare(
+      'INSERT INTO checklist_items (deal_id, label) VALUES (?, ?)'
+    )
+    CHECKLIST_STEPS.forEach((label) => insert.run(dealId, label))
+    return db
+      .prepare('SELECT * FROM checklist_items WHERE deal_id = ? ORDER BY id')
+      .all(dealId)
+  }
+  return existing
+}
+
+app.get('/api/deals/:id/checklist', (req, res) => {
+  const deal = db
+    .prepare('SELECT id FROM deals WHERE id = ?')
+    .get(Number(req.params.id))
+  if (!deal) {
+    return res.status(404).json({ error: 'no deal with that id' })
+  }
+  res.json(
+    checklistFor(deal.id).map((item) => ({ ...item, done: item.done === 1 }))
+  )
+})
+
+app.patch('/api/deals/:id/checklist/:itemId', (req, res) => {
+  const item = db
+    .prepare('SELECT * FROM checklist_items WHERE id = ? AND deal_id = ?')
+    .get(Number(req.params.itemId), Number(req.params.id))
+  if (!item) {
+    return res.status(404).json({ error: 'no checklist item with that id' })
+  }
+  const done = req.body && req.body.done ? 1 : 0
+  db.prepare('UPDATE checklist_items SET done = ? WHERE id = ?').run(
+    done,
+    item.id
+  )
+  res.json({ ...item, done: done === 1 })
+})
+
 app.get('/api/deals', (req, res) => {
   const agentId = req.query.agentId ? Number(req.query.agentId) : null
   res.json(dealsWithMath(agentId))
