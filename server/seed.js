@@ -31,7 +31,25 @@ const deals = [
   [4, '3 Chestnut Ridge, Caledon', 1390000, 2.5, 'seller', '2026-10-14', '2026-12-18', 'conditional', 'sphere', 0],
 ]
 
+// agent, name, type, status, last contacted. dates are spread out on
+// purpose — some clients I talked to last week, some I haven't talked
+// to in weeks, so the follow-up nudges have something to catch.
+const clients = [
+  [1, 'Maya Chen', 'buyer', 'active', '2026-10-12'],
+  [1, 'Tom Rivera', 'seller', 'active', '2026-11-02'],
+  [2, 'Ana Lopez', 'buyer', 'active', '2026-10-15'],
+  [2, 'Ben Carter', 'seller', 'past', '2026-09-20'],
+  [3, 'Sara Kim', 'buyer', 'active', '2026-11-01'],
+  [3, 'Omar Haddad', 'seller', 'active', '2026-10-05'],
+  [4, 'Lily Zhang', 'buyer', 'active', '2026-10-30'],
+  [4, 'Chris Doyle', 'seller', 'past', '2026-10-18'],
+]
+
+// checklist rows point at deals, and clients point at agents, so wipe
+// the children first or sqlite complains about the foreign keys.
+db.exec('DELETE FROM checklist_items')
 db.exec('DELETE FROM deals')
+db.exec('DELETE FROM clients')
 db.exec('DELETE FROM agents')
 
 const insertAgent = db.prepare(
@@ -50,6 +68,18 @@ for (const deal of deals) {
   insertDeal.run(...deal)
 }
 
+const insertClient = db.prepare(
+  `INSERT INTO clients
+   (agent_id, name, type, status, last_contacted)
+   VALUES (?, ?, ?, ?, ?)`
+)
+for (const client of clients) {
+  insertClient.run(...client)
+}
+
 const agentCount = db.prepare('SELECT COUNT(*) AS n FROM agents').get().n
 const dealCount = db.prepare('SELECT COUNT(*) AS n FROM deals').get().n
-console.log(`seeded ${agentCount} agents and ${dealCount} deals`)
+const clientCount = db.prepare('SELECT COUNT(*) AS n FROM clients').get().n
+console.log(
+  `seeded ${agentCount} agents, ${dealCount} deals and ${clientCount} clients`
+)

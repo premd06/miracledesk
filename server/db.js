@@ -1,7 +1,8 @@
-// the database for miracledesk — agents, deals, and a checklist
-// per deal. agents hold each realtor, deals hold their sales, and
-// checklist items track what still has to happen before a deal closes.
-// the seed script fills the first two with sample data, nothing real.
+// the database for miracledesk — agents, deals, clients, and a
+// checklist per deal. agents hold each realtor, deals hold their
+// sales, clients hold their buyers and sellers, and checklist items
+// track what still has to happen before a deal closes.
+// the seed script fills these with sample data, nothing real.
 const { DatabaseSync } = require('node:sqlite')
 const path = require('path')
 
@@ -26,6 +27,15 @@ db.exec(`
     status TEXT NOT NULL,
     source TEXT,
     referral_pct REAL DEFAULT 0,
+    FOREIGN KEY (agent_id) REFERENCES agents (id)
+  );
+  CREATE TABLE IF NOT EXISTS clients (
+    id INTEGER PRIMARY KEY,
+    agent_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active',
+    last_contacted TEXT,
     FOREIGN KEY (agent_id) REFERENCES agents (id)
   );
   CREATE TABLE IF NOT EXISTS checklist_items (

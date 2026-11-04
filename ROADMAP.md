@@ -46,8 +46,8 @@ professional, like something an office would actually use. clean tables, numbers
 ## the extras (picked oct 24)
 - [x] tax + HST set-aside card: HST collected so far + a rough "keep this much aside for taxes" number
 - [x] closing checklist on each deal: deposit in, conditions waived, lawyer has the docs, keys ready — so nothing falls through before closing day
-- [ ] clients: a list of each agent's buyers/sellers with a status and last-contacted date (own table + api + page)
-- [ ] follow-up nudges: "you haven't talked to this client in 14 days" + closing anniversaries ("1 year since they closed — send a text")
+- [x] clients: a list of each agent's buyers/sellers with a status and last-contacted date (own table + api + page)
+- [x] follow-up nudges: "you haven't talked to this client in 14 days" + closing anniversaries ("1 year since they closed — send a text")
 - [ ] calendar view: closings and condition deadlines on a month calendar
 - [ ] pace forecast on the goal bar: "at this rate you finish the year at $X"
 - [ ] badges + streaks: top producer of the month, closing streaks, first $100k — little stuff, agents love it

@@ -78,6 +78,16 @@
   color: #a8c2dd;
 }
 
+[data-theme='dark'] .status-lead {
+  background: #3d3320;
+  color: #e8c87a;
+}
+
+[data-theme='dark'] .status-past {
+  background: #2b3a4d;
+  color: #a8c2dd;
+}
+
 [data-theme='dark'] .form-error {
   color: #e88;
 }
@@ -244,6 +254,22 @@ main h1 {
 }
 
 .status-conditional {
+  background: #e8eef5;
+  color: #3d5a80;
+}
+
+/* client statuses reuse the same pill style as deal statuses */
+.status-active {
+  background: var(--sage-light);
+  color: var(--sage);
+}
+
+.status-lead {
+  background: #fdf3e0;
+  color: #8a6a1f;
+}
+
+.status-past {
   background: #e8eef5;
   color: #3d5a80;
 }

@@ -169,6 +169,154 @@ app.get('/api/agents', (req, res) => {
   res.json(db.prepare('SELECT id, name FROM agents ORDER BY name').all())
 })
 
+// every client, or one agent's with ?agentId=. newest contact first,
+// so the ones you haven't talked to in a while sink to the bottom.
+app.get('/api/clients', (req, res) => {
+  const agentId = req.query.agentId ? Number(req.query.agentId) : null
+  const rows = agentId
+    ? db
+        .prepare(
+          `SELECT clients.*, agents.name AS agent_name
+           FROM clients JOIN agents ON clients.agent_id = agents.id
+           WHERE agent_id = ? ORDER BY last_contacted`
+        )
+        .all(agentId)
+    : db
+        .prepare(
+          `SELECT clients.*, agents.name AS agent_name
+           FROM clients JOIN agents ON clients.agent_id = agents.id
+           ORDER BY last_contacted`
+        )
+        .all()
+  res.json(rows)
+})
+
+// add a client. the agent has to exist, and I need a name and a type
+// (buyer or seller) — status defaults to active, last contacted can
+// be left blank until you've actually talked to them.
+app.post('/api/clients', (req, res) => {
+  const body = req.body || {}
+  const agentId = Number(body.agent_id)
+
+  if (!body.name || (body.type !== 'buyer' && body.type !== 'seller')) {
+    return res
+      .status(400)
+      .json({ error: 'a name and a type (buyer or seller) are required' })
+  }
+  const agent = db
+    .prepare('SELECT * FROM agents WHERE id = ?')
+    .get(agentId)
+  if (!agent) {
+    return res.status(400).json({ error: 'no agent with that id' })
+  }
+
+  const result = db
+    .prepare(
+      `INSERT INTO clients
+       (agent_id, name, type, status, last_contacted)
+       VALUES (?, ?, ?, ?, ?)`
+    )
+    .run(
+      agentId,
+      body.name,
+      body.type,
+      body.status || 'active',
+      body.last_contacted || null
+    )
+
+  res
+    .status(201)
+    .json(
+      db
+        .prepare(
+          `SELECT clients.*, agents.name AS agent_name
+           FROM clients JOIN agents ON clients.agent_id = agents.id
+           WHERE clients.id = ?`
+        )
+        .get(result.lastInsertRowid)
+    )
+})
+
+// follow-up nudges, two kinds. stale clients are the ones I haven't
+// talked to in 14 days or more (or never) — those are the deals that
+// go quiet. anniversaries are closed deals whose closing anniversary
+// falls in the next 30 days — worth a text, past clients send referrals.
+// ?agentId= narrows both lists to one agent.
+app.get('/api/nudges', (req, res) => {
+  const agentId = req.query.agentId ? Number(req.query.agentId) : null
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const daysAgo = (dateText) =>
+    Math.floor((today - new Date(dateText + 'T00:00:00')) / 86400000)
+
+  const clientRows = agentId
+    ? db
+        .prepare(
+          `SELECT clients.*, agents.name AS agent_name
+           FROM clients JOIN agents ON clients.agent_id = agents.id
+           WHERE agent_id = ?`
+        )
+        .all(agentId)
+    : db
+        .prepare(
+          `SELECT clients.*, agents.name AS agent_name
+           FROM clients JOIN agents ON clients.agent_id = agents.id`
+        )
+        .all()
+
+  const stale = clientRows
+    .filter(
+      (client) =>
+        !client.last_contacted || daysAgo(client.last_contacted) >= 14
+    )
+    .map((client) => ({
+      ...client,
+      daysSinceContact: client.last_contacted
+        ? daysAgo(client.last_contacted)
+        : null,
+    }))
+    .sort((a, b) => (b.daysSinceContact || 999) - (a.daysSinceContact || 999))
+
+  const dealRows = agentId
+    ? db
+        .prepare(
+          `SELECT deals.*, agents.name AS agent_name
+           FROM deals JOIN agents ON deals.agent_id = agents.id
+           WHERE agent_id = ? AND status = 'closed'`
+        )
+        .all(agentId)
+    : db
+        .prepare(
+          `SELECT deals.*, agents.name AS agent_name
+           FROM deals JOIN agents ON deals.agent_id = agents.id
+           WHERE status = 'closed'`
+        )
+        .all()
+
+  const anniversaries = dealRows
+    .map((deal) => {
+      const monthDay = deal.closing_date.slice(5)
+      let year = today.getFullYear()
+      let anniversary = new Date(`${year}-${monthDay}T00:00:00`)
+      if (anniversary < today) {
+        year += 1
+        anniversary = new Date(`${year}-${monthDay}T00:00:00`)
+      }
+      const daysUntil = Math.round((anniversary - today) / 86400000)
+      return {
+        ...deal,
+        anniversaryDate: anniversary.toISOString().slice(0, 10),
+        years: year - Number(deal.closing_date.slice(0, 4)),
+        daysUntil,
+      }
+    })
+    .filter((deal) => deal.daysUntil <= 30)
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+
+  res.json({ stale, anniversaries })
+})
+
 // a pay-period export: every deal that closed in the date range, as
 // a csv the office can open in a spreadsheet. leave from/to off and
 // you get everything. ?agentId= narrows it to one agent.

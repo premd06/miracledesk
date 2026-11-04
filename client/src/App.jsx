@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import AddDealForm from './AddDealForm'
+import ClientsPage from './ClientsPage'
 import DealsTable from './DealsTable'
+import NudgesPanel from './NudgesPanel'
 import MonthlyChart from './MonthlyChart'
 import RecentDeals from './RecentDeals'
 import BrokerView from './BrokerView'
@@ -69,6 +71,11 @@ function App() {
             </section>
 
             <section className="deals-section">
+              <p className="section-label">Follow up</p>
+              <NudgesPanel />
+            </section>
+
+            <section className="deals-section">
               <p className="section-label">Recent deals</p>
               <RecentDeals />
             </section>
@@ -86,7 +93,9 @@ function App() {
 
         {page === 'Broker view' && <BrokerView />}
 
-        {page !== 'Dashboard' && page !== 'Deals' && page !== 'Broker view' && (
+        {page === 'Clients' && <ClientsPage />}
+
+        {page !== 'Dashboard' && page !== 'Deals' && page !== 'Broker view' && page !== 'Clients' && (
           <section className="placeholder">
             <h2>{page}</h2>
             <p>Coming in a later step.</p>
