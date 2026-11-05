@@ -50,8 +50,8 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] follow-up nudges: "you haven't talked to this client in 14 days" + closing anniversaries ("1 year since they closed — send a text")
 - [x] calendar view: closings and condition deadlines on a month calendar
 - [x] pace forecast on the goal bar: "at this rate you finish the year at $X"
-- [ ] badges + streaks: top producer of the month, closing streaks, first $100k — little stuff, agents love it
-- [ ] office pulse feed: "sarah just closed in brampton" — recent activity across the office
+- [x] badges + streaks: top producer of the month, closing streaks, first $100k — little stuff, agents love it
+- [x] office pulse feed: "sarah just closed in brampton" — recent activity across the office
 - [ ] TV leaderboard: a fullscreen big-type version of the leaderboard for an office TV, refreshes itself
 - [ ] deal map: leaflet map with a pin for every deal (same map setup as my real estate site) — where the office's business actually is
 - [ ] PDF income report: a clean printable earnings report per agent (agents need these for mortgages and loans)

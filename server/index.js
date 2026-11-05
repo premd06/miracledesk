@@ -4,6 +4,7 @@
 const express = require('express')
 const db = require('./db')
 const { commission } = require('./commission')
+const { computeBadges, buildFeed } = require('./badges')
 
 const app = express()
 const PORT = 3001
@@ -116,6 +117,20 @@ app.get('/api/summary', (req, res) => {
     taxSetAside: round(taxSetAside),
     paceForecast,
   })
+})
+
+// badges: one row per agent, each badge marked earned or not, with a
+// line saying what it took (or what it still takes). the math lives in
+// badges.js so I can test it without the server running.
+app.get('/api/badges', (req, res) => {
+  const agents = db.prepare('SELECT * FROM agents').all()
+  res.json(computeBadges(agents, dealsWithMath()))
+})
+
+// the office pulse: recent closings and deals closing soon, newest
+// first — a quick glance at what the office has actually been doing.
+app.get('/api/feed', (req, res) => {
+  res.json(buildFeed(dealsWithMath()))
 })
 
 // the calendar: every closing date and condition deadline in one

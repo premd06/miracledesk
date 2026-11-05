@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import PulseFeed from './PulseFeed'
 
 // the broker's office page: office totals, every agent ranked by net,
 // and what's closing this month. pulls from the leaderboard, summary
@@ -127,6 +128,11 @@ function BrokerView() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="deals-section">
+        <p className="section-label">Office pulse</p>
+        <PulseFeed />
       </section>
 
       <section className="deals-section">

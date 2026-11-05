@@ -4,6 +4,7 @@ import AddDealForm from './AddDealForm'
 import ClientsPage from './ClientsPage'
 import DealsTable from './DealsTable'
 import NudgesPanel from './NudgesPanel'
+import BadgesRow from './BadgesRow'
 import MonthlyChart from './MonthlyChart'
 import RecentDeals from './RecentDeals'
 import BrokerView from './BrokerView'
@@ -69,6 +70,11 @@ function App() {
             <section className="deals-section">
               <p className="section-label">Net earned by month</p>
               <MonthlyChart />
+            </section>
+
+            <section className="deals-section">
+              <p className="section-label">Badges</p>
+              <BadgesRow />
             </section>
 
             <section className="deals-section">
