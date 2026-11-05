@@ -7,10 +7,11 @@ import NudgesPanel from './NudgesPanel'
 import MonthlyChart from './MonthlyChart'
 import RecentDeals from './RecentDeals'
 import BrokerView from './BrokerView'
+import CalendarView from './CalendarView'
 import SummaryCards from './SummaryCards'
 import logoMark from './assets/logo-mark.webp'
 
-const pages = ['Dashboard', 'Deals', 'Clients', 'Broker view']
+const pages = ['Dashboard', 'Deals', 'Clients', 'Calendar', 'Broker view']
 
 function App() {
   const [page, setPage] = useState('Dashboard')
@@ -95,7 +96,9 @@ function App() {
 
         {page === 'Clients' && <ClientsPage />}
 
-        {page !== 'Dashboard' && page !== 'Deals' && page !== 'Broker view' && page !== 'Clients' && (
+        {page === 'Calendar' && <CalendarView />}
+
+        {page !== 'Dashboard' && page !== 'Deals' && page !== 'Broker view' && page !== 'Clients' && page !== 'Calendar' && (
           <section className="placeholder">
             <h2>{page}</h2>
             <p>Coming in a later step.</p>

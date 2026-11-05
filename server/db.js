@@ -24,6 +24,7 @@ db.exec(`
     side TEXT NOT NULL,
     sold_date TEXT,
     closing_date TEXT,
+    condition_deadline TEXT,
     status TEXT NOT NULL,
     source TEXT,
     referral_pct REAL DEFAULT 0,
@@ -47,5 +48,15 @@ db.exec(`
     FOREIGN KEY (deal_id) REFERENCES deals (id)
   );
 `)
+
+// the deals table started without a condition deadline column, so add
+// it to databases that were made before this change.
+const dealColumns = db
+  .prepare('PRAGMA table_info(deals)')
+  .all()
+  .map((column) => column.name)
+if (!dealColumns.includes('condition_deadline')) {
+  db.exec('ALTER TABLE deals ADD COLUMN condition_deadline TEXT')
+}
 
 module.exports = db

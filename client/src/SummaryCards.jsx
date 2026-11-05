@@ -57,7 +57,13 @@ function SummaryCards() {
     {
       label: 'Goal progress',
       value: summary.goalProgress + '%',
-      note: money(summary.netThisYear) + ' of a ' + money(summary.goal) + ' goal',
+      note:
+        money(summary.netThisYear) +
+        ' of a ' +
+        money(summary.goal) +
+        ' goal — on pace for ' +
+        money(summary.paceForecast) +
+        ' by year-end',
     },
     {
       label: 'HST & tax set-aside',

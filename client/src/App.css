@@ -274,6 +274,84 @@ main h1 {
   color: #3d5a80;
 }
 
+/* the calendar page — a plain month grid, one cell per day, with a
+   little label on the days something closes or conditions come due. */
+.calendar-nav {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-top: 40px;
+}
+
+.calendar-nav button {
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 24px;
+}
+
+.calendar-weekday {
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 4px 8px;
+}
+
+.calendar-day {
+  min-height: 72px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.calendar-day-empty {
+  border-color: transparent;
+}
+
+.calendar-day-today {
+  border-color: var(--sage);
+  border-width: 2px;
+}
+
+.calendar-day-number {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.calendar-event {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .calendar-day {
+    min-height: 56px;
+    padding: 4px;
+  }
+
+  .calendar-event {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+}
+
 @media (max-width: 640px) {
   .deals-table {
     display: block;

@@ -92,6 +92,18 @@ app.get('/api/summary', (req, res) => {
   )
   const taxSetAside = netThisYear * 0.25
 
+  // pace forecast: if I keep earning at the same rate I have so far
+  // this year, where do I finish on Dec 31? just net so far divided
+  // by the days gone, times the days in the year — a rough guess, not
+  // a promise, but it shows whether the goal is actually in reach.
+  const now = new Date()
+  const yearStart = new Date(now.getFullYear(), 0, 1)
+  const dayOfYear = Math.floor((now - yearStart) / 86400000) + 1
+  const year = now.getFullYear()
+  const isLeap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+  const daysInYear = isLeap ? 366 : 365
+  const paceForecast = round((netThisYear / dayOfYear) * daysInYear)
+
   res.json({
     netThisYear: round(netThisYear),
     dealCount: deals.length,
@@ -102,7 +114,44 @@ app.get('/api/summary', (req, res) => {
     goalProgress: goal ? round((netThisYear / goal) * 100) : 0,
     hstCollected: round(hstCollected),
     taxSetAside: round(taxSetAside),
+    paceForecast,
   })
+})
+
+// the calendar: every closing date and condition deadline in one
+// month, so an agent can see what's coming up at a glance.
+// ?month=2026-11, defaults to this month.
+app.get('/api/calendar', (req, res) => {
+  const month = req.query.month || new Date().toISOString().slice(0, 7)
+  const deals = dealsWithMath()
+
+  const events = []
+  deals.forEach((deal) => {
+    if (deal.closing_date && deal.closing_date.startsWith(month)) {
+      events.push({
+        date: deal.closing_date,
+        kind: 'closing',
+        dealId: deal.id,
+        address: deal.address,
+        agentName: deal.agent_name,
+        status: deal.status,
+        net: round(deal.net),
+      })
+    }
+    if (deal.condition_deadline && deal.condition_deadline.startsWith(month)) {
+      events.push({
+        date: deal.condition_deadline,
+        kind: 'condition deadline',
+        dealId: deal.id,
+        address: deal.address,
+        agentName: deal.agent_name,
+        status: deal.status,
+        net: round(deal.net),
+      })
+    }
+  })
+  events.sort((a, b) => a.date.localeCompare(b.date))
+  res.json(events)
 })
 
 // net earned per month, for the chart on the dashboard. only closed
@@ -471,8 +520,8 @@ app.post('/api/deals', (req, res) => {
     .prepare(
       `INSERT INTO deals
        (agent_id, address, price, commission_pct, side, sold_date,
-        closing_date, status, source, referral_pct)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        closing_date, condition_deadline, status, source, referral_pct)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       agentId,
@@ -482,6 +531,7 @@ app.post('/api/deals', (req, res) => {
       body.side,
       body.sold_date || null,
       body.closing_date || null,
+      body.condition_deadline || null,
       body.status,
       body.source || null,
       Number(body.referral_pct) || 0
