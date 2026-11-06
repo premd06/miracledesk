@@ -58,6 +58,10 @@ function App() {
         >
           {dark ? 'Light mode' : 'Dark mode'}
         </button>
+
+        <a className="tv-link" href="/tv" target="_blank" rel="noreferrer">
+          Open TV board
+        </a>
       </aside>
 
       <main>
