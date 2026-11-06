@@ -680,3 +680,24 @@ main h1 {
     grid-template-columns: 1fr;
   }
 }
+
+/* the deal map: tall enough to actually use, pins in the sage theme */
+.deal-map {
+  height: 520px;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.deal-pin {
+  background: var(--sage);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.deal-map .leaflet-popup-content {
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+}

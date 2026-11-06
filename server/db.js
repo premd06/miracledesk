@@ -28,6 +28,8 @@ db.exec(`
     status TEXT NOT NULL,
     source TEXT,
     referral_pct REAL DEFAULT 0,
+    lat REAL,
+    lng REAL,
     FOREIGN KEY (agent_id) REFERENCES agents (id)
   );
   CREATE TABLE IF NOT EXISTS clients (
@@ -50,13 +52,20 @@ db.exec(`
 `)
 
 // the deals table started without a condition deadline column, so add
-// it to databases that were made before this change.
+// it to databases that were made before this change. same story for
+// the map pins — lat/lng came later too.
 const dealColumns = db
   .prepare('PRAGMA table_info(deals)')
   .all()
   .map((column) => column.name)
 if (!dealColumns.includes('condition_deadline')) {
   db.exec('ALTER TABLE deals ADD COLUMN condition_deadline TEXT')
+}
+if (!dealColumns.includes('lat')) {
+  db.exec('ALTER TABLE deals ADD COLUMN lat REAL')
+}
+if (!dealColumns.includes('lng')) {
+  db.exec('ALTER TABLE deals ADD COLUMN lng REAL')
 }
 
 module.exports = db

@@ -9,10 +9,11 @@ import MonthlyChart from './MonthlyChart'
 import RecentDeals from './RecentDeals'
 import BrokerView from './BrokerView'
 import CalendarView from './CalendarView'
+import DealMap from './DealMap'
 import SummaryCards from './SummaryCards'
 import logoMark from './assets/logo-mark.webp'
 
-const pages = ['Dashboard', 'Deals', 'Clients', 'Calendar', 'Broker view']
+const pages = ['Dashboard', 'Deals', 'Clients', 'Calendar', 'Map', 'Broker view']
 
 function App() {
   const [page, setPage] = useState('Dashboard')
@@ -108,7 +109,13 @@ function App() {
 
         {page === 'Calendar' && <CalendarView />}
 
-        {page !== 'Dashboard' && page !== 'Deals' && page !== 'Broker view' && page !== 'Clients' && page !== 'Calendar' && (
+        {page === 'Map' && (
+          <section className="deals-section">
+            <DealMap />
+          </section>
+        )}
+
+        {page !== 'Dashboard' && page !== 'Deals' && page !== 'Broker view' && page !== 'Clients' && page !== 'Calendar' && page !== 'Map' && (
           <section className="placeholder">
             <h2>{page}</h2>
             <p>Coming in a later step.</p>

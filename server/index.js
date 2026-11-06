@@ -535,8 +535,8 @@ app.post('/api/deals', (req, res) => {
     .prepare(
       `INSERT INTO deals
        (agent_id, address, price, commission_pct, side, sold_date,
-        closing_date, condition_deadline, status, source, referral_pct)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        closing_date, condition_deadline, status, source, referral_pct, lat, lng)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       agentId,
@@ -549,7 +549,9 @@ app.post('/api/deals', (req, res) => {
       body.condition_deadline || null,
       body.status,
       body.source || null,
-      Number(body.referral_pct) || 0
+      Number(body.referral_pct) || 0,
+      Number(body.lat) || null,
+      Number(body.lng) || null
     )
 
   // run the whole list through the math so a tiered split counts the
