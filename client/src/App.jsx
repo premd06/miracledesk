@@ -10,6 +10,7 @@ import RecentDeals from './RecentDeals'
 import BrokerView from './BrokerView'
 import CalendarView from './CalendarView'
 import DealMap from './DealMap'
+import IncomeReport from './IncomeReport'
 import SummaryCards from './SummaryCards'
 import logoMark from './assets/logo-mark.webp'
 
@@ -85,6 +86,11 @@ function App() {
             <section className="deals-section">
               <p className="section-label">Follow up</p>
               <NudgesPanel />
+            </section>
+
+            <section className="deals-section">
+              <p className="section-label">Income report</p>
+              <IncomeReport />
             </section>
 
             <section className="deals-section">

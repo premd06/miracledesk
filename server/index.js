@@ -5,6 +5,7 @@ const express = require('express')
 const db = require('./db')
 const { commission } = require('./commission')
 const { computeBadges, buildFeed } = require('./badges')
+const { buildIncomeReport } = require('./report')
 
 const app = express()
 const PORT = 3001
@@ -226,6 +227,22 @@ app.get('/api/leaderboard', (req, res) => {
     .sort((a, b) => b.netThisYear - a.netThisYear)
 
   res.json(rows)
+})
+
+// the income report: a clean printable page per agent, for mortgages
+// and loans — open it in the browser and print to pdf. needs an agent,
+// and the agent has to exist.
+app.get('/api/report/income', (req, res) => {
+  const agentId = Number(req.query.agentId)
+  if (!agentId) {
+    return res.status(400).json({ error: 'agentId is required' })
+  }
+  const agent = db.prepare('SELECT * FROM agents WHERE id = ?').get(agentId)
+  if (!agent) {
+    return res.status(404).json({ error: 'no agent with that id' })
+  }
+  res.setHeader('Content-Type', 'text/html')
+  res.send(buildIncomeReport(agent, dealsWithMath(agentId)))
 })
 
 // the agents, for the add-a-deal form's dropdown.

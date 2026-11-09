@@ -54,7 +54,7 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] office pulse feed: "sarah just closed in brampton" — recent activity across the office
 - [x] TV leaderboard: a fullscreen big-type version of the leaderboard for an office TV, refreshes itself
 - [x] deal map: leaflet map with a pin for every deal (same map setup as my real estate site) — where the office's business actually is
-- [ ] PDF income report: a clean printable earnings report per agent (agents need these for mortgages and loans)
+- [x] PDF income report: a clean printable earnings report per agent (agents need these for mortgages and loans)
 
 ## accounts
 - [ ] real login: agents log in and only see their own deals, the broker sees everything. hashed passwords, roles checked on the server, not just hidden in the frontend

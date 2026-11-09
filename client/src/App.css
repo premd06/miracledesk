@@ -466,7 +466,8 @@ main h1 {
   color: var(--muted);
 }
 
-.export-row input {
+.export-row input,
+.export-row select {
   font: inherit;
   color: var(--text);
   padding: 8px 10px;
