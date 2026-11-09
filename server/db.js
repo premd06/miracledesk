@@ -49,6 +49,15 @@ db.exec(`
     UNIQUE (deal_id, label),
     FOREIGN KEY (deal_id) REFERENCES deals (id)
   );
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    agent_id INTEGER,
+    username TEXT NOT NULL UNIQUE,
+    password_salt TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL,
+    FOREIGN KEY (agent_id) REFERENCES agents (id)
+  );
 `)
 
 // the deals table started without a condition deadline column, so add

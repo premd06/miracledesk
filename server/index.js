@@ -6,6 +6,7 @@ const db = require('./db')
 const { commission } = require('./commission')
 const { computeBadges, buildFeed } = require('./badges')
 const { buildIncomeReport } = require('./report')
+const { loginUser, getUser, logout } = require('./auth')
 
 const app = express()
 const PORT = 3001
@@ -14,6 +15,39 @@ app.use(express.json())
 
 // just to check the server is up
 app.get('/api/health', (req, res) => {
+  res.json({ ok: true })
+})
+
+// log in: send { username, password } and get back a token plus who
+// you are (name, role, agent id). the token goes in the
+// Authorization header on later calls. wrong password or unknown
+// username is a 401 with no hint about which one was wrong.
+app.post('/api/login', (req, res) => {
+  const body = req.body || {}
+  const result = loginUser(db, body.username, body.password)
+  if (!result) {
+    return res.status(401).json({ error: 'wrong username or password' })
+  }
+  res.json(result)
+})
+
+// who am I, from the token. the frontend calls this when it loads so
+// a saved token still counts as logged in.
+app.get('/api/me', (req, res) => {
+  const token = (req.headers.authorization || '').replace('Bearer ', '')
+  const user = token ? getUser(token) : null
+  if (!user) {
+    return res.status(401).json({ error: 'not logged in' })
+  }
+  res.json(user)
+})
+
+// log out: the token stops working. the frontend also clears its copy.
+app.post('/api/logout', (req, res) => {
+  const token = (req.headers.authorization || '').replace('Bearer ', '')
+  if (token) {
+    logout(token)
+  }
   res.json({ ok: true })
 })
 

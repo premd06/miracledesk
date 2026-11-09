@@ -35,6 +35,10 @@ cd server && npm install && npm start     # localhost:3001
 cd client && npm install && npm run dev   # localhost:5173
 ```
 
+## demo logins
+
+the seed script (`cd server && node seed.js`) makes a login for each sample agent, plus a broker login. they all use the password **demo1234** — it's the same for everyone because this is sample data, and the database only stores the password's hash, never the password itself. usernames: `sam`, `jess`, `dan`, `priya` (agents), `broker` (sees the whole office).
+
 ## status
 
 just started (oct 2026). building it in small commits, same as my other projects — the plan is in ROADMAP.md.

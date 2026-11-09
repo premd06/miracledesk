@@ -11,6 +11,7 @@ import BrokerView from './BrokerView'
 import CalendarView from './CalendarView'
 import DealMap from './DealMap'
 import IncomeReport from './IncomeReport'
+import LoginPage from './LoginPage'
 import SummaryCards from './SummaryCards'
 import logoMark from './assets/logo-mark.webp'
 
@@ -20,6 +21,15 @@ function App() {
   const [page, setPage] = useState('Dashboard')
   // bumped every time a deal is saved, so the table reloads
   const [dealsVersion, setDealsVersion] = useState(0)
+  // who is logged in — read back from localStorage so a refresh
+  // doesn't log you out. null means the login screen shows instead.
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('miracledesk-user'))
+    } catch {
+      return null
+    }
+  })
   // dark mode, saved so it sticks between visits
   const [dark, setDark] = useState(
     () => localStorage.getItem('miracledesk-theme') === 'dark',
@@ -30,6 +40,21 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('miracledesk-theme', theme)
   }, [dark])
+
+  function handleLogout() {
+    const token = localStorage.getItem('miracledesk-token')
+    fetch('/api/logout', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => {})
+    localStorage.removeItem('miracledesk-token')
+    localStorage.removeItem('miracledesk-user')
+    setUser(null)
+  }
+
+  if (!user) {
+    return <LoginPage onLoggedIn={setUser} />
+  }
 
   return (
     <div className="layout">
@@ -64,6 +89,13 @@ function App() {
         <a className="tv-link" href="/tv" target="_blank" rel="noreferrer">
           Open TV board
         </a>
+
+        <p className="whoami">
+          Logged in as {user.name} ({user.role})
+        </p>
+        <button type="button" className="theme-toggle" onClick={handleLogout}>
+          Log out
+        </button>
       </aside>
 
       <main>

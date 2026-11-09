@@ -3,6 +3,7 @@
 // run it any time with: node seed.js (from the server folder)
 // it wipes the tables first so running it twice doesn't double up.
 const db = require('./db')
+const { hashPassword } = require('./auth')
 
 const agents = [
   // name, split plan, yearly goal
@@ -49,8 +50,24 @@ const clients = [
   [4, 'Chris Doyle', 'seller', 'past', '2026-10-18'],
 ]
 
+// demo logins — one per sample agent, plus a broker login that isn't
+// tied to any one agent. the password is the same for all of them
+// (demo1234) and it's only in here because this is sample data —
+// real passwords would never be written down like this, and the
+// database only ever stores the hash, never the password itself.
+const logins = [
+  // agent id, username, role
+  [1, 'sam', 'agent'],
+  [2, 'jess', 'agent'],
+  [3, 'dan', 'agent'],
+  [4, 'priya', 'agent'],
+  [null, 'broker', 'broker'],
+]
+
 // checklist rows point at deals, and clients point at agents, so wipe
 // the children first or sqlite complains about the foreign keys.
+// users point at agents too, so they go first as well.
+db.exec('DELETE FROM users')
 db.exec('DELETE FROM checklist_items')
 db.exec('DELETE FROM deals')
 db.exec('DELETE FROM clients')
@@ -81,9 +98,20 @@ for (const client of clients) {
   insertClient.run(...client)
 }
 
+const insertUser = db.prepare(
+  `INSERT INTO users
+   (agent_id, username, password_salt, password_hash, role)
+   VALUES (?, ?, ?, ?, ?)`
+)
+for (const [agentId, username, role] of logins) {
+  const { salt, hash } = hashPassword('demo1234')
+  insertUser.run(agentId, username, salt, hash, role)
+}
+
 const agentCount = db.prepare('SELECT COUNT(*) AS n FROM agents').get().n
 const dealCount = db.prepare('SELECT COUNT(*) AS n FROM deals').get().n
 const clientCount = db.prepare('SELECT COUNT(*) AS n FROM clients').get().n
+const userCount = db.prepare('SELECT COUNT(*) AS n FROM users').get().n
 console.log(
-  `seeded ${agentCount} agents, ${dealCount} deals and ${clientCount} clients`
+  `seeded ${agentCount} agents, ${dealCount} deals, ${clientCount} clients and ${userCount} logins`
 )

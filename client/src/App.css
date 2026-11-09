@@ -486,6 +486,44 @@ main h1 {
   text-decoration: none;
 }
 
+/* the login screen — just a centred card, reusing the deal-form
+   styles for the inputs and the button. */
+.login-wrap {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-card .deal-form {
+  grid-template-columns: 1fr;
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.login-sub {
+  color: var(--muted);
+  margin: 8px 0 24px;
+}
+
+.login-hint {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 24px;
+}
+
+.whoami {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 32px;
+}
+
 .form-error {
   grid-column: 1 / -1;
   color: #a33;
