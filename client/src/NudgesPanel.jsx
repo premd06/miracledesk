@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './api'
 
 // the follow-up nudges on the dashboard: clients I haven't talked to
 // in 14+ days, and closing anniversaries coming up in the next month.
@@ -9,7 +10,7 @@ function NudgesPanel() {
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
-    fetch('/api/nudges')
+    apiFetch('/api/nudges')
       .then((res) => res.json())
       .then((data) => setNudges(data))
       .catch(() => setFailed(true))

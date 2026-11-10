@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './api'
 
 // pulls the totals from /api/summary and shows them as cards.
 // same idea as the deals table: if the server isn't running,
@@ -13,7 +14,7 @@ function SummaryCards() {
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
-    fetch('/api/summary')
+    apiFetch('/api/summary')
       .then((res) => res.json())
       .then((data) => {
         setSummary(data)

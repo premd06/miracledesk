@@ -4,6 +4,12 @@ import './App.css'
 // the office TV board — open it at /tv and leave it on the screen in
 // the office. big type so it reads from across the room, and it
 // reloads the numbers itself every minute so nobody has to touch it.
+//
+// /tv is its own page with no login screen, so it sends the saved
+// token itself. if nobody is logged in, it says so — log in on the
+// main app first (as the broker, for the whole office), then open
+// this page again. it uses the same login the main app saved, so
+// there's nothing extra to type in here.
 function money(n) {
   return '$' + Math.round(n).toLocaleString()
 }
@@ -12,22 +18,42 @@ function TvBoard() {
   const [leaders, setLeaders] = useState(null)
   const [summary, setSummary] = useState(null)
   const [failed, setFailed] = useState(false)
+  const [needsLogin, setNeedsLogin] = useState(false)
   const [updatedAt, setUpdatedAt] = useState(null)
 
   // one function for loading, so the first load and the timer below
   // both just call the same thing.
   function load() {
+    const token = localStorage.getItem('miracledesk-token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
     Promise.all([
-      fetch('/api/leaderboard').then((res) => res.json()),
-      fetch('/api/summary').then((res) => res.json()),
+      fetch('/api/leaderboard', { headers }).then((res) => {
+        if (res.status === 401) {
+          throw new Error('not logged in')
+        }
+        return res.json()
+      }),
+      fetch('/api/summary', { headers }).then((res) => {
+        if (res.status === 401) {
+          throw new Error('not logged in')
+        }
+        return res.json()
+      }),
     ])
       .then(([leaderData, summaryData]) => {
         setLeaders(leaderData)
         setSummary(summaryData)
         setFailed(false)
+        setNeedsLogin(false)
         setUpdatedAt(new Date())
       })
-      .catch(() => setFailed(true))
+      .catch((err) => {
+        if (err.message === 'not logged in') {
+          setNeedsLogin(true)
+        } else {
+          setFailed(true)
+        }
+      })
   }
 
   useEffect(() => {
@@ -36,6 +62,18 @@ function TvBoard() {
     const timer = setInterval(load, 60 * 1000)
     return () => clearInterval(timer)
   }, [])
+
+  if (needsLogin) {
+    return (
+      <div className="tv">
+        <p className="tv-error">
+          Nobody is logged in on this screen — log in on the main app
+          first (as the broker, for the whole office), then open this
+          page again and it will pick the numbers up on its own.
+        </p>
+      </div>
+    )
+  }
 
   if (failed) {
     return (

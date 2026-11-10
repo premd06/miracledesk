@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { apiFetch } from './api'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -17,7 +18,7 @@ function DealMap() {
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
-    fetch('/api/deals')
+    apiFetch('/api/deals')
       .then((res) => res.json())
       .then((data) => {
         setDeals(data)

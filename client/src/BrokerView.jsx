@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './api'
 import PulseFeed from './PulseFeed'
 
 // the broker's office page: office totals, every agent ranked by net,
@@ -18,9 +19,9 @@ function BrokerView() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/leaderboard').then((res) => res.json()),
-      fetch('/api/summary').then((res) => res.json()),
-      fetch('/api/deals').then((res) => res.json()),
+      apiFetch('/api/leaderboard').then((res) => res.json()),
+      apiFetch('/api/summary').then((res) => res.json()),
+      apiFetch('/api/deals').then((res) => res.json()),
     ])
       .then(([leaderData, summaryData, dealData]) => {
         setLeaders(leaderData)

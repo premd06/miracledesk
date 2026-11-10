@@ -57,7 +57,7 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] PDF income report: a clean printable earnings report per agent (agents need these for mortgages and loans)
 
 ## accounts
-- [ ] real login: agents log in and only see their own deals, the broker sees everything. hashed passwords, roles checked on the server, not just hidden in the frontend
+- [x] real login: agents log in and only see their own deals, the broker sees everything. hashed passwords, roles checked on the server, not just hidden in the frontend
 
 ## later
 - [ ] import deals from a csv (offices already have spreadsheets — nobody's re-typing history)

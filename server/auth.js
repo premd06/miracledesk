@@ -3,9 +3,9 @@
 // token you send back as "Authorization: Bearer <token>".
 // tokens live in memory here, so restarting the server logs everyone
 // out — fine for a demo, the real thing would store sessions properly.
-// roles are just 'agent' or 'broker' for now. part 2 of this feature
-// (next session) is the server actually checking those roles on the
-// data routes — right now login just proves who you are.
+// roles are just 'agent' or 'broker' for now. the server checks them
+// on the data routes (roles.js) — an agent only ever sees their own
+// deals and numbers, the broker sees the whole office.
 const crypto = require('node:crypto')
 
 // one random salt per password, so two people with the same password

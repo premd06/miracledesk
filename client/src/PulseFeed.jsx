@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './api'
 
 // the office pulse feed in the broker view: what the office has
 // actually been doing lately — deals that closed, and deals closing
@@ -8,7 +9,7 @@ function PulseFeed() {
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
-    fetch('/api/feed')
+    apiFetch('/api/feed')
       .then((res) => res.json())
       .then((data) => setFeed(data))
       .catch(() => setFailed(true))

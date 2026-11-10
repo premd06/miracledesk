@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './api'
 
 // the clients page: a table of every agent's buyers and sellers, plus
 // a form to add one. if the server isn't running it says so plainly,
@@ -17,7 +18,7 @@ function ClientsPage() {
   const [saved, setSaved] = useState(false)
 
   function loadClients() {
-    fetch('/api/clients')
+    apiFetch('/api/clients')
       .then((res) => res.json())
       .then((data) => {
         setClients(data)
@@ -31,7 +32,7 @@ function ClientsPage() {
 
   useEffect(() => {
     loadClients()
-    fetch('/api/agents')
+    apiFetch('/api/agents')
       .then((res) => res.json())
       .then((data) => {
         setAgents(data)
@@ -47,7 +48,7 @@ function ClientsPage() {
     setError('')
     setSaved(false)
 
-    fetch('/api/clients', {
+    apiFetch('/api/clients', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

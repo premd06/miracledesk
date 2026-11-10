@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'
+import { apiFetch } from './api'
 
 // pulls the deals from the api and shows them as a table.
 // if the server isn't running, it says so plainly instead of
@@ -19,14 +20,14 @@ function DealsTable({ refreshKey }) {
       return
     }
     setOpenDeal(deal.id)
-    fetch(`/api/deals/${deal.id}/checklist`)
+    apiFetch(`/api/deals/${deal.id}/checklist`)
       .then((res) => res.json())
       .then((data) => setChecklist(data))
       .catch(() => setChecklist([]))
   }
 
   function toggleItem(item) {
-    fetch(`/api/deals/${openDeal}/checklist/${item.id}`, {
+    apiFetch(`/api/deals/${openDeal}/checklist/${item.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ done: !item.done }),
@@ -40,7 +41,7 @@ function DealsTable({ refreshKey }) {
   }
 
   useEffect(() => {
-    fetch('/api/deals')
+    apiFetch('/api/deals')
       .then((res) => res.json())
       .then((data) => {
         setDeals(data)

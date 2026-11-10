@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './api'
 
 // a form for adding a deal. posts to the api, and when it works it
 // tells the page (through onAdded) so the table refreshes and the new
@@ -17,7 +18,7 @@ function AddDealForm({ onAdded }) {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    fetch('/api/agents')
+    apiFetch('/api/agents')
       .then((res) => res.json())
       .then((data) => {
         setAgents(data)
@@ -33,7 +34,7 @@ function AddDealForm({ onAdded }) {
     setError('')
     setSaved(false)
 
-    fetch('/api/deals', {
+    apiFetch('/api/deals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './api'
 
 // a month calendar with closings and condition deadlines on it, so
 // an agent can see what's coming up without digging through the
@@ -26,7 +27,7 @@ function CalendarView() {
 
   useEffect(() => {
     setLoading(true)
-    fetch('/api/calendar?month=' + monthKey)
+    apiFetch('/api/calendar?month=' + monthKey)
       .then((res) => res.json())
       .then((data) => {
         setEvents(data)

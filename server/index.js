@@ -7,11 +7,49 @@ const { commission } = require('./commission')
 const { computeBadges, buildFeed } = require('./badges')
 const { buildIncomeReport } = require('./report')
 const { loginUser, getUser, logout } = require('./auth')
+const {
+  visibleAgentId,
+  canCreateFor,
+  canSeeDeal,
+} = require('./roles')
 
 const app = express()
 const PORT = 3001
 
 app.use(express.json())
+
+// login part 2: every data route needs a token now. /api/login,
+// /api/logout, /api/me and /api/health stay open — everything else
+// goes through requireLogin, so no route can forget to check.
+// the token comes in as "Authorization: Bearer <token>".
+const OPEN_ROUTES = ['/login', '/logout', '/me', '/health']
+app.use('/api', (req, res, next) => {
+  if (OPEN_ROUTES.includes(req.path)) {
+    return next()
+  }
+  const token = (req.headers.authorization || '').replace('Bearer ', '')
+  const user = token ? getUser(token) : null
+  if (!user) {
+    return res.status(401).json({ error: 'not logged in' })
+  }
+  req.user = user
+  next()
+})
+
+// pulls the agent id out of ?agentId= and checks the caller is
+// allowed to ask for it. sends a 403 and returns undefined when an
+// agent asks for someone else's data — the route just returns when
+// it gets undefined back. a broker asking for nothing gets null,
+// which means the whole office.
+function scopedAgentId(req, res) {
+  const asked = req.query.agentId ? Number(req.query.agentId) : null
+  const scoped = visibleAgentId(req.user, asked)
+  if (scoped === false) {
+    res.status(403).json({ error: 'you can only see your own data' })
+    return undefined
+  }
+  return scoped
+}
 
 // just to check the server is up
 app.get('/api/health', (req, res) => {
@@ -88,9 +126,14 @@ function thisYear(deal) {
 }
 
 // the numbers for the dashboard cards. ?agentId= for one agent's numbers,
-// otherwise the whole office. "made this year" only counts closed deals.
+// otherwise the whole office — but only a broker gets the whole
+// office; an agent always gets their own numbers. "made this year"
+// only counts closed deals.
 app.get('/api/summary', (req, res) => {
-  const agentId = req.query.agentId ? Number(req.query.agentId) : null
+  const agentId = scopedAgentId(req, res)
+  if (agentId === undefined) {
+    return
+  }
   const deals = dealsWithMath(agentId)
 
   const closedThisYear = deals.filter(
@@ -155,25 +198,37 @@ app.get('/api/summary', (req, res) => {
 })
 
 // badges: one row per agent, each badge marked earned or not, with a
-// line saying what it took (or what it still takes). the math lives in
-// badges.js so I can test it without the server running.
+// line saying what it took (or what it still takes). an agent only
+// gets their own row — the whole office is for the broker. the math
+// lives in badges.js so I can test it without the server running.
 app.get('/api/badges', (req, res) => {
   const agents = db.prepare('SELECT * FROM agents').all()
-  res.json(computeBadges(agents, dealsWithMath()))
+  const rows = computeBadges(agents, dealsWithMath())
+  if (req.user.role === 'broker') {
+    return res.json(rows)
+  }
+  res.json(rows.filter((row) => row.id === req.user.agentId))
 })
 
 // the office pulse: recent closings and deals closing soon, newest
 // first — a quick glance at what the office has actually been doing.
+// an agent only sees their own deals in it.
 app.get('/api/feed', (req, res) => {
-  res.json(buildFeed(dealsWithMath()))
+  const agentId = req.user.role === 'broker' ? null : req.user.agentId
+  res.json(buildFeed(dealsWithMath(agentId)))
 })
 
 // the calendar: every closing date and condition deadline in one
 // month, so an agent can see what's coming up at a glance.
-// ?month=2026-11, defaults to this month.
+// ?month=2026-11, defaults to this month. an agent only sees
+// their own deals' events.
 app.get('/api/calendar', (req, res) => {
   const month = req.query.month || new Date().toISOString().slice(0, 7)
-  const deals = dealsWithMath()
+  const agentId = scopedAgentId(req, res)
+  if (agentId === undefined) {
+    return
+  }
+  const deals = dealsWithMath(agentId)
 
   const events = []
   deals.forEach((deal) => {
@@ -207,9 +262,13 @@ app.get('/api/calendar', (req, res) => {
 // net earned per month, for the chart on the dashboard. only closed
 // deals count, and only this year's — so the chart shows how the year
 // actually went, month by month. months with no closings still show up
-// as zero, otherwise the chart would have gaps in it.
+// as zero, otherwise the chart would have gaps in it. an agent only
+// sees their own months.
 app.get('/api/monthly', (req, res) => {
-  const agentId = req.query.agentId ? Number(req.query.agentId) : null
+  const agentId = scopedAgentId(req, res)
+  if (agentId === undefined) {
+    return
+  }
   const deals = dealsWithMath(agentId)
 
   const months = [
@@ -231,7 +290,7 @@ app.get('/api/monthly', (req, res) => {
 })
 
 // every agent ranked by net earned this year, most on top — this is what
-// the broker view will show.
+// the broker view will show. an agent only gets their own row.
 app.get('/api/leaderboard', (req, res) => {
   const agents = db.prepare('SELECT * FROM agents').all()
   const deals = dealsWithMath()
@@ -260,14 +319,21 @@ app.get('/api/leaderboard', (req, res) => {
     })
     .sort((a, b) => b.netThisYear - a.netThisYear)
 
-  res.json(rows)
+  if (req.user.role === 'broker') {
+    return res.json(rows)
+  }
+  res.json(rows.filter((row) => row.id === req.user.agentId))
 })
 
 // the income report: a clean printable page per agent, for mortgages
 // and loans — open it in the browser and print to pdf. needs an agent,
-// and the agent has to exist.
+// and the agent has to exist. an agent can only pull their own
+// report; a broker can pull anyone's.
 app.get('/api/report/income', (req, res) => {
-  const agentId = Number(req.query.agentId)
+  const agentId = scopedAgentId(req, res)
+  if (agentId === undefined) {
+    return
+  }
   if (!agentId) {
     return res.status(400).json({ error: 'agentId is required' })
   }
@@ -279,15 +345,29 @@ app.get('/api/report/income', (req, res) => {
   res.send(buildIncomeReport(agent, dealsWithMath(agentId)))
 })
 
-// the agents, for the add-a-deal form's dropdown.
+// the agents, for the add-a-deal form's dropdown. an agent only
+// sees themselves in it — the broker sees everyone.
 app.get('/api/agents', (req, res) => {
-  res.json(db.prepare('SELECT id, name FROM agents ORDER BY name').all())
+  if (req.user.role === 'broker') {
+    return res.json(
+      db.prepare('SELECT id, name FROM agents ORDER BY name').all()
+    )
+  }
+  res.json(
+    db
+      .prepare('SELECT id, name FROM agents WHERE id = ?')
+      .all(req.user.agentId)
+  )
 })
 
 // every client, or one agent's with ?agentId=. newest contact first,
 // so the ones you haven't talked to in a while sink to the bottom.
+// an agent only sees their own clients.
 app.get('/api/clients', (req, res) => {
-  const agentId = req.query.agentId ? Number(req.query.agentId) : null
+  const agentId = scopedAgentId(req, res)
+  if (agentId === undefined) {
+    return
+  }
   const rows = agentId
     ? db
         .prepare(
@@ -308,10 +388,17 @@ app.get('/api/clients', (req, res) => {
 
 // add a client. the agent has to exist, and I need a name and a type
 // (buyer or seller) — status defaults to active, last contacted can
-// be left blank until you've actually talked to them.
+// be left blank until you've actually talked to them. an agent can
+// only add clients for themselves.
 app.post('/api/clients', (req, res) => {
   const body = req.body || {}
   const agentId = Number(body.agent_id)
+
+  if (!canCreateFor(req.user, agentId)) {
+    return res
+      .status(403)
+      .json({ error: 'you can only add clients for yourself' })
+  }
 
   if (!body.name || (body.type !== 'buyer' && body.type !== 'seller')) {
     return res
@@ -356,9 +443,13 @@ app.post('/api/clients', (req, res) => {
 // talked to in 14 days or more (or never) — those are the deals that
 // go quiet. anniversaries are closed deals whose closing anniversary
 // falls in the next 30 days — worth a text, past clients send referrals.
-// ?agentId= narrows both lists to one agent.
+// ?agentId= narrows both lists to one agent. an agent only sees
+// their own nudges.
 app.get('/api/nudges', (req, res) => {
-  const agentId = req.query.agentId ? Number(req.query.agentId) : null
+  const agentId = scopedAgentId(req, res)
+  if (agentId === undefined) {
+    return
+  }
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -434,9 +525,13 @@ app.get('/api/nudges', (req, res) => {
 
 // a pay-period export: every deal that closed in the date range, as
 // a csv the office can open in a spreadsheet. leave from/to off and
-// you get everything. ?agentId= narrows it to one agent.
+// you get everything. ?agentId= narrows it to one agent. an agent
+// only exports their own deals.
 app.get('/api/export/payperiod', (req, res) => {
-  const agentId = req.query.agentId ? Number(req.query.agentId) : null
+  const agentId = scopedAgentId(req, res)
+  if (agentId === undefined) {
+    return
+  }
   const from = req.query.from || ''
   const to = req.query.to || ''
 
@@ -525,10 +620,13 @@ function checklistFor(dealId) {
 
 app.get('/api/deals/:id/checklist', (req, res) => {
   const deal = db
-    .prepare('SELECT id FROM deals WHERE id = ?')
+    .prepare('SELECT * FROM deals WHERE id = ?')
     .get(Number(req.params.id))
   if (!deal) {
     return res.status(404).json({ error: 'no deal with that id' })
+  }
+  if (!canSeeDeal(req.user, deal)) {
+    return res.status(403).json({ error: "that's not your deal" })
   }
   res.json(
     checklistFor(deal.id).map((item) => ({ ...item, done: item.done === 1 }))
@@ -536,6 +634,15 @@ app.get('/api/deals/:id/checklist', (req, res) => {
 })
 
 app.patch('/api/deals/:id/checklist/:itemId', (req, res) => {
+  const deal = db
+    .prepare('SELECT * FROM deals WHERE id = ?')
+    .get(Number(req.params.id))
+  if (!deal) {
+    return res.status(404).json({ error: 'no deal with that id' })
+  }
+  if (!canSeeDeal(req.user, deal)) {
+    return res.status(403).json({ error: "that's not your deal" })
+  }
   const item = db
     .prepare('SELECT * FROM checklist_items WHERE id = ? AND deal_id = ?')
     .get(Number(req.params.itemId), Number(req.params.id))
@@ -551,19 +658,29 @@ app.patch('/api/deals/:id/checklist/:itemId', (req, res) => {
 })
 
 app.get('/api/deals', (req, res) => {
-  const agentId = req.query.agentId ? Number(req.query.agentId) : null
+  const agentId = scopedAgentId(req, res)
+  if (agentId === undefined) {
+    return
+  }
   res.json(dealsWithMath(agentId))
 })
 
 // add a deal. the agent has to exist, and the basics (address, price,
 // commission %, side, status) have to be there — everything else can be
 // filled in later. returns the new deal with its math worked out, so the
-// form can show the net right away.
+// form can show the net right away. an agent can only add deals
+// for themselves.
 app.post('/api/deals', (req, res) => {
   const body = req.body || {}
   const agentId = Number(body.agent_id)
   const price = Number(body.price)
   const commissionPct = Number(body.commission_pct)
+
+  if (!canCreateFor(req.user, agentId)) {
+    return res
+      .status(403)
+      .json({ error: 'you can only add deals for yourself' })
+  }
 
   if (!body.address || !body.side || !body.status) {
     return res

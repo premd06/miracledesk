@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './api'
 import {
   Area,
   AreaChart,
@@ -22,7 +23,7 @@ function MonthlyChart() {
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
-    fetch('/api/monthly')
+    apiFetch('/api/monthly')
       .then((res) => res.json())
       .then((data) => {
         setMonths(data)

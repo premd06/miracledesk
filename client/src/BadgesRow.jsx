@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './api'
 
 // the badges row on the dashboard: one line per agent, three badges
 // each. earned badges are filled in, the ones nobody has hit yet stay
@@ -9,7 +10,7 @@ function BadgesRow() {
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
-    fetch('/api/badges')
+    apiFetch('/api/badges')
       .then((res) => res.json())
       .then((data) => setRows(data))
       .catch(() => setFailed(true))

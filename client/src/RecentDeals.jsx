@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './api'
 
 // pulls the deals from the api and shows the five with the latest
 // closing dates, like a recent deals list. the full table lives on
@@ -13,7 +14,7 @@ function RecentDeals() {
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
-    fetch('/api/deals')
+    apiFetch('/api/deals')
       .then((res) => res.json())
       .then((data) => {
         setDeals(data)
