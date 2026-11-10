@@ -161,6 +161,35 @@ main h1 {
   margin-top: 16px;
 }
 
+/* search box + status dropdown above the deals table */
+.table-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.table-filters input,
+.table-filters select {
+  font: inherit;
+  color: var(--text);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.table-filters input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.table-count {
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .recent-row {
   display: flex;
   align-items: baseline;
