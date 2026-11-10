@@ -5,6 +5,16 @@ import { apiFetch } from './api'
 // tells the page (through onAdded) so the table refreshes and the new
 // deal shows up with its math done. if something's off, the server's
 // error message shows under the form.
+// the city dropdown is only for the map pin — it drops a rough pin
+// at the city centre so the deal shows on the map. it's approximate,
+// not the real address, so picking nothing just means no pin.
+const cityPins = {
+  Brampton: [43.73, -79.76],
+  Mississauga: [43.6, -79.65],
+  Caledon: [43.87, -79.84],
+  Vaughan: [43.83, -79.51],
+}
+
 function AddDealForm({ onAdded }) {
   const [agents, setAgents] = useState([])
   const [agentId, setAgentId] = useState('')
@@ -14,6 +24,7 @@ function AddDealForm({ onAdded }) {
   const [side, setSide] = useState('buyer')
   const [closingDate, setClosingDate] = useState('')
   const [status, setStatus] = useState('pending')
+  const [cityPin, setCityPin] = useState('')
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
 
@@ -34,6 +45,8 @@ function AddDealForm({ onAdded }) {
     setError('')
     setSaved(false)
 
+    const pin = cityPin ? cityPins[cityPin] : null
+
     apiFetch('/api/deals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -45,6 +58,8 @@ function AddDealForm({ onAdded }) {
         side,
         closing_date: closingDate || null,
         status,
+        lat: pin ? pin[0] : null,
+        lng: pin ? pin[1] : null,
       }),
     })
       .then(async (res) => {
@@ -59,6 +74,7 @@ function AddDealForm({ onAdded }) {
         setAddress('')
         setPrice('')
         setClosingDate('')
+        setCityPin('')
         onAdded()
       })
       .catch((err) => setError(err.message))
@@ -141,6 +157,17 @@ function AddDealForm({ onAdded }) {
           <option value="pending">Pending</option>
           <option value="conditional">Conditional</option>
           <option value="closed">Closed</option>
+        </select>
+      </label>
+
+      <label>
+        City (for the map pin — optional)
+        <select value={cityPin} onChange={(e) => setCityPin(e.target.value)}>
+          <option value="">No pin</option>
+          <option value="Brampton">Brampton</option>
+          <option value="Mississauga">Mississauga</option>
+          <option value="Caledon">Caledon</option>
+          <option value="Vaughan">Vaughan</option>
         </select>
       </label>
 
