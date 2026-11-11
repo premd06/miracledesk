@@ -319,6 +319,79 @@ main h1 {
   margin-right: 10px;
 }
 
+/* edit + delete live in the open deal row, under the checklist */
+.row-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.row-actions button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.row-actions .delete-button {
+  color: #b3402e;
+  border-color: #e5b8b0;
+}
+
+.edit-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.edit-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.edit-form input,
+.edit-form select {
+  font: inherit;
+  color: var(--text);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.edit-form button {
+  justify-self: start;
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 6px;
+  border: 0;
+  background: var(--sage);
+  color: #fff;
+  cursor: pointer;
+}
+
+.edit-form button[type='button'] {
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.edit-form .form-error {
+  grid-column: 1 / -1;
+}
+
 .status-closed {
   background: var(--sage-light);
   color: var(--sage);

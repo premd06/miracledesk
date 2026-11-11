@@ -7,6 +7,7 @@ const { commission } = require('./commission')
 const { computeBadges, buildFeed } = require('./badges')
 const { buildIncomeReport } = require('./report')
 const { loginUser, getUser, logout } = require('./auth')
+const { cleanDealUpdate } = require('./dealEdit')
 const {
   visibleAgentId,
   canCreateFor,
@@ -726,6 +727,57 @@ app.post('/api/deals', (req, res) => {
   // deals before this one, then pick the new deal out of it.
   const created = dealsWithMath().find((deal) => deal.id === result.lastInsertRowid)
   res.status(201).json(created)
+})
+
+// edit a deal — fix a typo'd price, change the status, move the
+// closing date. only the fields sent get changed, and only an
+// agent's own deals (or any deal, if you're the broker). returns
+// the updated deal with its math re-worked, so the table shows the
+// new net straight away.
+app.patch('/api/deals/:id', (req, res) => {
+  const deal = db
+    .prepare('SELECT * FROM deals WHERE id = ?')
+    .get(Number(req.params.id))
+  if (!deal) {
+    return res.status(404).json({ error: 'no deal with that id' })
+  }
+  if (!canSeeDeal(req.user, deal)) {
+    return res.status(403).json({ error: "that's not your deal" })
+  }
+
+  const { updates, error } = cleanDealUpdate(req.body || {})
+  if (error) {
+    return res.status(400).json({ error })
+  }
+
+  const columns = Object.keys(updates)
+  const setClause = columns.map((column) => `${column} = ?`).join(', ')
+  db.prepare(`UPDATE deals SET ${setClause} WHERE id = ?`).run(
+    ...columns.map((column) => updates[column]),
+    deal.id
+  )
+
+  const updated = dealsWithMath().find((row) => row.id === deal.id)
+  res.json(updated)
+})
+
+// delete a deal. same rule as editing — your own deals only, broker
+// can delete any. the deal's checklist rows go too, so nothing is
+// left pointing at a deal that doesn't exist any more.
+app.delete('/api/deals/:id', (req, res) => {
+  const deal = db
+    .prepare('SELECT * FROM deals WHERE id = ?')
+    .get(Number(req.params.id))
+  if (!deal) {
+    return res.status(404).json({ error: 'no deal with that id' })
+  }
+  if (!canSeeDeal(req.user, deal)) {
+    return res.status(403).json({ error: "that's not your deal" })
+  }
+
+  db.prepare('DELETE FROM checklist_items WHERE deal_id = ?').run(deal.id)
+  db.prepare('DELETE FROM deals WHERE id = ?').run(deal.id)
+  res.json({ ok: true })
 })
 
 function round(n) {

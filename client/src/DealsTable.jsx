@@ -9,6 +9,8 @@ import { apiFetch } from './api'
 // with tickable boxes that save straight to the server.
 // the search box filters by address or agent, and the status
 // dropdown narrows it to pending, conditional or closed deals.
+// an open row also has edit + delete: edit opens a small form right
+// there in the row, delete asks first, then removes the deal.
 function DealsTable({ refreshKey }) {
   const [deals, setDeals] = useState([])
   const [loading, setLoading] = useState(true)
@@ -17,6 +19,89 @@ function DealsTable({ refreshKey }) {
   const [checklist, setChecklist] = useState([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [editing, setEditing] = useState(null)
+  const [editAddress, setEditAddress] = useState('')
+  const [editPrice, setEditPrice] = useState('')
+  const [editCommissionPct, setEditCommissionPct] = useState('')
+  const [editSide, setEditSide] = useState('buyer')
+  const [editStatus, setEditStatus] = useState('pending')
+  const [editClosingDate, setEditClosingDate] = useState('')
+  const [editError, setEditError] = useState('')
+
+  function loadDeals() {
+    apiFetch('/api/deals')
+      .then((res) => res.json())
+      .then((data) => {
+        setDeals(data)
+        setLoading(false)
+      })
+      .catch(() => {
+        setFailed(true)
+        setLoading(false)
+      })
+  }
+
+  // start editing a deal: fill the form with what the deal has now.
+  function startEdit(deal) {
+    setEditAddress(deal.address)
+    setEditPrice(String(deal.price))
+    setEditCommissionPct(String(deal.commission_pct))
+    setEditSide(deal.side)
+    setEditStatus(deal.status)
+    setEditClosingDate(deal.closing_date || '')
+    setEditError('')
+    setEditing(deal.id)
+  }
+
+  function saveEdit(deal) {
+    setEditError('')
+    apiFetch(`/api/deals/${deal.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        address: editAddress,
+        price: Number(editPrice),
+        commission_pct: Number(editCommissionPct),
+        side: editSide,
+        status: editStatus,
+        closing_date: editClosingDate || null,
+      }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || 'could not save the changes')
+        }
+        return res.json()
+      })
+      .then(() => {
+        setEditing(null)
+        loadDeals()
+      })
+      .catch((err) => setEditError(err.message))
+  }
+
+  // delete asks first — there's no undo, so the browser's confirm
+  // box is the safety net.
+  function deleteDeal(deal) {
+    if (
+      !window.confirm(
+        `Delete the deal at ${deal.address}? This can't be undone.`
+      )
+    ) {
+      return
+    }
+    apiFetch(`/api/deals/${deal.id}`, { method: 'DELETE' })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('could not delete the deal')
+        }
+        setOpenDeal(null)
+        setEditing(null)
+        loadDeals()
+      })
+      .catch(() => setEditError('could not delete the deal'))
+  }
 
   function toggleDeal(deal) {
     if (openDeal === deal.id) {
@@ -44,18 +129,7 @@ function DealsTable({ refreshKey }) {
       })
   }
 
-  useEffect(() => {
-    apiFetch('/api/deals')
-      .then((res) => res.json())
-      .then((data) => {
-        setDeals(data)
-        setLoading(false)
-      })
-      .catch(() => {
-        setFailed(true)
-        setLoading(false)
-      })
-  }, [refreshKey])
+  useEffect(loadDeals, [refreshKey])
 
   if (loading) {
     return <p className="table-note">Loading deals…</p>
@@ -167,6 +241,102 @@ function DealsTable({ refreshKey }) {
                       {item.label}
                     </label>
                   ))}
+                  {editing === deal.id ? (
+                    <form
+                      className="edit-form"
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        saveEdit(deal)
+                      }}
+                    >
+                      <label>
+                        Address
+                        <input
+                          type="text"
+                          value={editAddress}
+                          onChange={(e) => setEditAddress(e.target.value)}
+                          required
+                        />
+                      </label>
+                      <label>
+                        Price
+                        <input
+                          type="number"
+                          min="1"
+                          value={editPrice}
+                          onChange={(e) => setEditPrice(e.target.value)}
+                          required
+                        />
+                      </label>
+                      <label>
+                        Commission %
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          value={editCommissionPct}
+                          onChange={(e) =>
+                            setEditCommissionPct(e.target.value)
+                          }
+                          required
+                        />
+                      </label>
+                      <label>
+                        Side
+                        <select
+                          value={editSide}
+                          onChange={(e) => setEditSide(e.target.value)}
+                        >
+                          <option value="buyer">Buyer</option>
+                          <option value="seller">Seller</option>
+                        </select>
+                      </label>
+                      <label>
+                        Closing date
+                        <input
+                          type="date"
+                          value={editClosingDate}
+                          onChange={(e) =>
+                            setEditClosingDate(e.target.value)
+                          }
+                        />
+                      </label>
+                      <label>
+                        Status
+                        <select
+                          value={editStatus}
+                          onChange={(e) => setEditStatus(e.target.value)}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="conditional">Conditional</option>
+                          <option value="closed">Closed</option>
+                        </select>
+                      </label>
+                      <button type="submit">Save changes</button>
+                      <button type="button" onClick={() => setEditing(null)}>
+                        Cancel
+                      </button>
+                      {editError && (
+                        <p className="form-error">{editError}</p>
+                      )}
+                    </form>
+                  ) : (
+                    <div className="row-actions">
+                      <button type="button" onClick={() => startEdit(deal)}>
+                        Edit deal
+                      </button>
+                      <button
+                        type="button"
+                        className="delete-button"
+                        onClick={() => deleteDeal(deal)}
+                      >
+                        Delete deal
+                      </button>
+                      {editError && (
+                        <p className="form-error">{editError}</p>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
             )}
