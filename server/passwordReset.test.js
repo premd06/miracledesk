@@ -4,7 +4,7 @@ const test = require('node:test')
 const assert = require('node:assert')
 const crypto = require('node:crypto')
 const { DatabaseSync } = require('node:sqlite')
-const { hashPassword, loginUser } = require('./auth')
+const { hashPassword, loginUser, getUser } = require('./auth')
 const {
   hashToken,
   requestPasswordReset,
@@ -25,7 +25,16 @@ function testDb() {
       email TEXT,
       password_salt TEXT NOT NULL,
       password_hash TEXT NOT NULL,
-      role TEXT NOT NULL
+      role TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 1
+    );
+    CREATE TABLE sessions (
+      id INTEGER PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      created_at INTEGER NOT NULL,
+      last_used_at INTEGER NOT NULL,
+      expires_at INTEGER NOT NULL
     );
     CREATE TABLE password_resets (
       id INTEGER PRIMARY KEY,
@@ -158,4 +167,18 @@ test('asking for a second reset kills the first token', () => {
   assert.deepEqual(resetPassword(db, second.token, 'brand-new-pass'), {
     ok: true,
   })
+})
+
+test('resetting the password logs the account out everywhere', () => {
+  const db = testDb()
+  const login = loginUser(db, 'sam', 'demo1234')
+  assert.ok(getUser(db, login.token))
+  const reset = requestPasswordReset(db, 'sam@miracledesk.test')
+  assert.deepEqual(resetPassword(db, reset.token, 'brand-new-pass'), {
+    ok: true,
+  })
+  // the old token is dead even though it had 30 days left
+  assert.equal(getUser(db, login.token), null)
+  // and the new password works
+  assert.ok(loginUser(db, 'sam', 'brand-new-pass'))
 })

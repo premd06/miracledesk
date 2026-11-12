@@ -12,6 +12,21 @@ const {
   resetPassword,
 } = require('./passwordReset')
 const { sendResetEmail } = require('./mailer')
+const {
+  listAccounts,
+  createAccount,
+  resetAccountPassword,
+  setAccountActive,
+  changePassword,
+} = require('./accounts')
+const { createLimiter } = require('./rateLimit')
+
+// two small in-memory limits (see rateLimit.js): 10 failed logins
+// per username in 15 minutes, and 5 reset requests per email in an
+// hour. they're per-username and per-email on purpose — one person
+// guessing at passwords shouldn't lock the whole office out.
+const loginLimiter = createLimiter(15 * 60 * 1000, 10)
+const forgotLimiter = createLimiter(60 * 60 * 1000, 5)
 const { cleanDealUpdate } = require('./dealEdit')
 const {
   visibleAgentId,
@@ -41,7 +56,7 @@ app.use('/api', (req, res, next) => {
     return next()
   }
   const token = (req.headers.authorization || '').replace('Bearer ', '')
-  const user = token ? getUser(token) : null
+  const user = token ? getUser(db, token) : null
   if (!user) {
     return res.status(401).json({ error: 'not logged in' })
   }
@@ -74,12 +89,23 @@ app.get('/api/health', (req, res) => {
 // or an email — both work. the token goes in the Authorization
 // header on later calls. wrong password or unknown login is a 401
 // with no hint about which one was wrong.
+// 10 wrong tries in 15 minutes for one login gets a 429 — that
+// stops someone hammering at one account. a good login clears the
+// count, so an honest typo doesn't count against anyone.
 app.post('/api/login', (req, res) => {
   const body = req.body || {}
+  const loginKey = String(body.username || '').trim().toLowerCase()
+  if (loginLimiter.isBlocked(loginKey)) {
+    return res.status(429).json({
+      error: 'too many failed logins — try again in a few minutes',
+    })
+  }
   const result = loginUser(db, body.username, body.password)
   if (!result) {
+    loginLimiter.hit(loginKey)
     return res.status(401).json({ error: 'wrong username or password' })
   }
+  loginLimiter.clear(loginKey)
   res.json(result)
 })
 
@@ -90,6 +116,17 @@ app.post('/api/login', (req, res) => {
 // at the frontend's reset page, with the token in the url.
 app.post('/api/forgot-password', async (req, res) => {
   const body = req.body || {}
+  const emailKey = String(body.email || '').trim().toLowerCase()
+  // 5 reset requests per email in an hour — otherwise anyone could
+  // flood one person's inbox with reset emails. the limit counts
+  // every request, real email or not, and the answer stays the same
+  // generic sentence either way.
+  if (forgotLimiter.isBlocked(emailKey)) {
+    return res.status(429).json({
+      error: 'too many reset requests for this email — try again later',
+    })
+  }
+  forgotLimiter.hit(emailKey)
   const reset = requestPasswordReset(db, body.email)
   if (reset) {
     const base = (process.env.RESET_BASE_URL || 'http://localhost:5173').replace(
@@ -130,7 +167,7 @@ app.post('/api/reset-password', (req, res) => {
 // a saved token still counts as logged in.
 app.get('/api/me', (req, res) => {
   const token = (req.headers.authorization || '').replace('Bearer ', '')
-  const user = token ? getUser(token) : null
+  const user = token ? getUser(db, token) : null
   if (!user) {
     return res.status(401).json({ error: 'not logged in' })
   }
@@ -141,7 +178,99 @@ app.get('/api/me', (req, res) => {
 app.post('/api/logout', (req, res) => {
   const token = (req.headers.authorization || '').replace('Bearer ', '')
   if (token) {
-    logout(token)
+    logout(db, token)
+  }
+  res.json({ ok: true })
+})
+
+// accounts are the broker's job — an agent asking for them gets a
+// 403, same as asking for someone else's deals.
+function requireBroker(req, res) {
+  if (req.user.role !== 'broker') {
+    res.status(403).json({ error: 'only the broker can manage accounts' })
+    return false
+  }
+  return true
+}
+
+// every account in the office, with who they are and whether they
+// can log in. broker only.
+app.get('/api/accounts', (req, res) => {
+  if (!requireBroker(req, res)) {
+    return
+  }
+  res.json(listAccounts(db))
+})
+
+// add a new agent: name, username, email, starting password, and
+// optionally the split plan and yearly goal. broker only — and the
+// broker can't make another broker here, agents only.
+app.post('/api/accounts', (req, res) => {
+  if (!requireBroker(req, res)) {
+    return
+  }
+  const result = createAccount(db, req.body || {})
+  if (result.error) {
+    return res.status(400).json({ error: result.error })
+  }
+  res.status(201).json(result.account)
+})
+
+// set a new password for one account. broker only, and not for
+// their own account — the broker changes their own password with
+// /api/change-password like everyone else. the account's logins
+// everywhere stop working when this happens.
+app.post('/api/accounts/:id/reset-password', (req, res) => {
+  if (!requireBroker(req, res)) {
+    return
+  }
+  const userId = Number(req.params.id)
+  if (userId === req.user.id) {
+    return res.status(400).json({
+      error: 'use change password for your own account',
+    })
+  }
+  const result = resetAccountPassword(db, userId, (req.body || {}).password)
+  if (result.error) {
+    return res.status(400).json({ error: result.error })
+  }
+  res.json({ ok: true })
+})
+
+// turn one account off or back on. broker only, and the broker
+// can't turn off their own account — that would lock the office
+// out of its own accounts page. turning an account off logs them
+// out everywhere on the spot.
+app.post('/api/accounts/:id/active', (req, res) => {
+  if (!requireBroker(req, res)) {
+    return
+  }
+  const userId = Number(req.params.id)
+  if (userId === req.user.id) {
+    return res
+      .status(400)
+      .json({ error: 'you cannot turn off your own account' })
+  }
+  const result = setAccountActive(db, userId, Boolean((req.body || {}).active))
+  if (result.error) {
+    return res.status(400).json({ error: result.error })
+  }
+  res.json({ ok: true })
+})
+
+// change your own password: the current one has to be right, and
+// the new one has to be at least 8 characters. anyone logged in can
+// use this — agent or broker.
+app.post('/api/change-password', (req, res) => {
+  const body = req.body || {}
+  const result = changePassword(
+    db,
+    req.user.id,
+    body.currentPassword,
+    body.password
+  )
+  if (result.error) {
+    return res.status(400).json({ error: result.error })
   }
   res.json({ ok: true })
 })

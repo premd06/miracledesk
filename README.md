@@ -47,6 +47,14 @@ forgot your password? there's a link on the login screen. type your email in and
 
 honest bit: the reset email only actually sends once the server has SMTP set up. put these in the environment and it sends for real: `SMTP_HOST`, `SMTP_PORT` (587 if you leave it out), `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` (defaults to SMTP_USER), `RESET_BASE_URL` (where the reset link points — `http://localhost:5173` when you're running it locally). with no SMTP, the reset link just gets printed to the server console instead, so the flow still works for testing — check the log.
 
+## logins that stick, and the broker's accounts page
+
+once you're logged in, you stay logged in. logins live in the database (the sessions table), not in the server's memory — so restarting the server doesn't log anyone out, and closing the tab changes nothing, the token is still saved in your browser and still good when you come back. a login lasts 30 days, and every time you use the app it stretches another 30 days out, so anyone who actually uses it never gets kicked out. logging out deletes just that one login — if you're logged in on your phone too, that one keeps working.
+
+the broker has an Accounts page in the sidebar (agents never see it). from there the broker can add a new agent (name, username, email, starting password, split plan, yearly goal), see every account in the office, reset anyone's password, and turn an account off and back on. turning an account off logs them out everywhere on the spot and they can't log back in until it's turned back on. the broker can't turn off their own account, and can't reset their own password from that page — everyone changes their own password from the "Change password" button in the sidebar, current password first.
+
+two small limits keep the login safe: 10 wrong passwords for one login in 15 minutes gets a "try again in a few minutes" (a good login clears the count, so a typo doesn't count against you), and 5 reset requests for one email in an hour. they're counted in the server's memory — fine for one server.
+
 ## status
 
 just started (oct 2026). building it in small commits, same as my other projects — the plan is in ROADMAP.md.

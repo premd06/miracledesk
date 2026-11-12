@@ -12,21 +12,22 @@ import BrokerView from './BrokerView'
 import CalendarView from './CalendarView'
 import DealMap from './DealMap'
 import IncomeReport from './IncomeReport'
+import AccountsPage from './AccountsPage'
 import LoginPage from './LoginPage'
 import SummaryCards from './SummaryCards'
 import logoMark from './assets/logo-mark.webp'
 
-const pages = ['Dashboard', 'Deals', 'Clients', 'Calendar', 'Map', 'Broker view']
+const basePages = ['Dashboard', 'Deals', 'Clients', 'Calendar', 'Map', 'Broker view']
 
 function App() {
   const [page, setPage] = useState('Dashboard')
   // bumped every time a deal is saved, so the table reloads
   const [dealsVersion, setDealsVersion] = useState(0)
   // who is logged in. starts empty on every load — the saved token
-  // gets checked against /api/me below, so a token that died (the
-  // server restarted, or you logged out somewhere else) drops you
-  // back to the login screen instead of showing the dashboard with
-  // a stale name in the corner.
+  // gets checked against /api/me below, so a token that died (it
+  // expired, the account was turned off, or you logged out
+  // somewhere else) drops you back to the login screen instead of
+  // showing the dashboard with a stale name in the corner.
   const [user, setUser] = useState(null)
   const [checkedLogin, setCheckedLogin] = useState(false)
 
@@ -57,6 +58,52 @@ function App() {
   const [dark, setDark] = useState(
     () => localStorage.getItem('miracledesk-theme') === 'dark',
   )
+
+  // change my own password, from the sidebar. the server checks
+  // the current password first, so nobody can change it from an
+  // unlocked laptop without knowing it.
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [changeError, setChangeError] = useState('')
+  const [changeSaved, setChangeSaved] = useState(false)
+
+  function handleChangePassword(event) {
+    event.preventDefault()
+    setChangeError('')
+    setChangeSaved(false)
+
+    if (newPassword !== confirmPassword) {
+      setChangeError('the new passwords do not match')
+      return
+    }
+
+    apiFetch('/api/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword, password: newPassword }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || 'could not change the password')
+        }
+        return res.json()
+      })
+      .then(() => {
+        setChangeSaved(true)
+        setCurrentPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+      })
+      .catch((err) => setChangeError(err.message))
+  }
+
+  // the broker gets one more page in the sidebar — Accounts — where
+  // they add agents and reset passwords. agents never see it.
+  const pages =
+    user && user.role === 'broker' ? [...basePages, 'Accounts'] : basePages
 
   useEffect(() => {
     const theme = dark ? 'dark' : 'light'
@@ -130,6 +177,59 @@ function App() {
         <button type="button" className="theme-toggle" onClick={handleLogout}>
           Log out
         </button>
+
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={() => {
+            setShowChangePassword((show) => !show)
+            setChangeError('')
+            setChangeSaved(false)
+          }}
+        >
+          Change password
+        </button>
+
+        {showChangePassword && (
+          <form className="sidebar-form" onSubmit={handleChangePassword}>
+            <label>
+              Current password
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </label>
+            <label>
+              New password
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                autoComplete="new-password"
+                placeholder="at least 8 characters"
+                required
+              />
+            </label>
+            <label>
+              New password again
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                autoComplete="new-password"
+                required
+              />
+            </label>
+            <button type="submit">Save new password</button>
+            {changeError && <p className="form-error">{changeError}</p>}
+            {changeSaved && (
+              <p className="form-saved">Password changed.</p>
+            )}
+          </form>
+        )}
       </aside>
 
       <main>
@@ -177,6 +277,8 @@ function App() {
 
         {page === 'Broker view' && <BrokerView />}
 
+        {page === 'Accounts' && <AccountsPage />}
+
         {page === 'Clients' && <ClientsPage />}
 
         {page === 'Calendar' && <CalendarView />}
@@ -187,7 +289,7 @@ function App() {
           </section>
         )}
 
-        {page !== 'Dashboard' && page !== 'Deals' && page !== 'Broker view' && page !== 'Clients' && page !== 'Calendar' && page !== 'Map' && (
+        {page !== 'Dashboard' && page !== 'Deals' && page !== 'Broker view' && page !== 'Accounts' && page !== 'Clients' && page !== 'Calendar' && page !== 'Map' && (
           <section className="placeholder">
             <h2>{page}</h2>
             <p>Coming in a later step.</p>

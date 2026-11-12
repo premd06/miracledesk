@@ -6,15 +6,11 @@
 // new password, and the old password keeps working until the reset
 // actually goes through, so a stray email can't lock anyone out.
 const crypto = require('node:crypto')
-const { hashPassword } = require('./auth')
+const { hashPassword, logoutAll, MIN_PASSWORD_LENGTH } = require('./auth')
 
 // an hour, in milliseconds. short on purpose — a reset link sitting
 // in an inbox for days is a spare key someone forgot about.
 const RESET_TTL_MS = 60 * 60 * 1000
-
-// a password has to be at least this long. 8 isn't Fort Knox, but it
-// stops the one-word passwords people actually pick.
-const MIN_PASSWORD_LENGTH = 8
 
 function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex')
@@ -90,6 +86,10 @@ function resetPassword(db, token, newPassword) {
   db.prepare(
     'UPDATE users SET password_salt = ?, password_hash = ? WHERE id = ?'
   ).run(salt, hash, reset.user_id)
+  // a reset means the old password might be known to someone else,
+  // so every existing login for that account stops working — they
+  // log in again with the new password.
+  logoutAll(db, reset.user_id)
   return { ok: true }
 }
 

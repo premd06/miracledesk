@@ -2,6 +2,11 @@
 // work. none of this is real — fake agents, fake deals, fake addresses.
 // run it any time with: node seed.js (from the server folder)
 // it wipes the tables first so running it twice doesn't double up.
+//
+// WARNING: this deletes everything — every deal, client, account
+// and login session in the database it runs against. only ever run
+// it on the sample database. never run it against a real office's
+// database, or all their real data is gone.
 const db = require('./db')
 const { hashPassword } = require('./auth')
 
@@ -70,7 +75,9 @@ const logins = [
 // checklist rows point at deals, and clients point at agents, so wipe
 // the children first or sqlite complains about the foreign keys.
 // users point at agents too, so they go first as well — and reset
-// rows point at users, so they go before the users do.
+// rows point at users, so they go before the users do. sessions
+// point at users too, so they go first of all.
+db.exec('DELETE FROM sessions')
 db.exec('DELETE FROM password_resets')
 db.exec('DELETE FROM users')
 db.exec('DELETE FROM checklist_items')

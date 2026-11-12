@@ -67,6 +67,15 @@ db.exec(`
     used_at INTEGER,
     FOREIGN KEY (user_id) REFERENCES users (id)
   );
+  CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    created_at INTEGER NOT NULL,
+    last_used_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+  );
 `)
 
 // the deals table started without a condition deadline column, so add
@@ -101,5 +110,15 @@ if (!userColumns.includes('email')) {
 db.exec(
   'CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)'
 )
+
+// the users table started without an active flag, so add it to
+// databases that were made before this change. active = 1 means the
+// account can log in; the broker flips it to 0 to deactivate
+// someone, and they can't log in (or keep using an old token) until
+// it's flipped back. defaults to 1 so every existing account stays
+// active.
+if (!userColumns.includes('active')) {
+  db.exec('ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1')
+}
 
 module.exports = db
