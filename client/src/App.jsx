@@ -145,7 +145,6 @@ function App() {
           <img className="logo-mark" src={logoMark} alt="" />
           <p className="logo">MiracleDesk</p>
         </div>
-        <p className="top-note">Sample data</p>
 
         <nav className="nav">
           {pages.map((name) => (

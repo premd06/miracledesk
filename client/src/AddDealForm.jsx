@@ -45,6 +45,13 @@ function AddDealForm({ onAdded }) {
     setError('')
     setSaved(false)
 
+    // the server says no too, but catching it here saves a round
+    // trip — a closed deal has to have a closing date.
+    if (status === 'closed' && !closingDate) {
+      setError('a closing date is required when a deal is closed')
+      return
+    }
+
     const pin = cityPin ? cityPins[cityPin] : null
 
     apiFetch('/api/deals', {
@@ -143,11 +150,12 @@ function AddDealForm({ onAdded }) {
       </label>
 
       <label>
-        Closing date
+        Closing date{status === 'closed' ? ' (required)' : ''}
         <input
           type="date"
           value={closingDate}
           onChange={(e) => setClosingDate(e.target.value)}
+          required={status === 'closed'}
         />
       </label>
 

@@ -55,6 +55,16 @@ the broker has an Accounts page in the sidebar (agents never see it). from there
 
 two small limits keep the login safe: 10 wrong passwords for one login in 15 minutes gets a "try again in a few minutes" (a good login clears the count, so a typo doesn't count against you), and 5 reset requests for one email in an hour. they're counted in the server's memory — fine for one server.
 
+## setting it up for a real office
+
+the seed script is only for playing around — it wipes the whole database. a real office starts empty:
+
+1. `cd server && npm install`
+2. `npm run setup <username> <email> <password>` — makes the first broker account. it only works on an empty database, and it refuses if any account already exists, so run it once and that's it.
+3. log in as that broker and add your agents from the Accounts page.
+4. for password resets to actually email people, set the SMTP settings from the section above, plus `RESET_BASE_URL` to the address agents open the app at (like `https://miracledesk.ca`) — without it, reset links point at localhost. the server says so on startup if either one is missing.
+5. never run `node seed.js` against a real office's database — it deletes every deal, client, account and login in it.
+
 ## importing deals, sorting the table, per-agent goals
 
 moving off a spreadsheet? on the Deals page there's an "Import deals from a CSV" form — pick a file and whose deals they are, and the server adds the good rows. the columns it wants are: address, price, commission %, side, status, closing date, city (optional). a row with a problem is skipped, not the whole file — it tells you which row and why, so you can fix the file and try again. agents can only import their own deals; the broker can import for anyone.

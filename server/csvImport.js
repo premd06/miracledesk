@@ -120,19 +120,32 @@ function rowError(row) {
   if (!row.address) {
     return 'missing address'
   }
-  if (!row.side) {
+  const side = (row.side || '').toLowerCase()
+  if (!side) {
     return 'missing side'
   }
-  if (!row.status) {
+  if (side !== 'buyer' && side !== 'seller') {
+    return 'side has to be buyer or seller'
+  }
+  const status = (row.status || '').toLowerCase()
+  if (!status) {
     return 'missing status'
+  }
+  if (status !== 'pending' && status !== 'conditional' && status !== 'closed') {
+    return 'status has to be pending, conditional or closed'
   }
   const price = Number(row.price)
   if (!row.price || !price || price <= 0) {
     return 'price has to be a number over 0'
   }
   const commissionPct = Number(row.commission_pct)
-  if (!row.commission_pct || !commissionPct || commissionPct <= 0) {
-    return 'commission % has to be a number over 0'
+  if (!row.commission_pct || !commissionPct || commissionPct <= 0 || commissionPct > 100) {
+    return 'commission % has to be between 0 and 100'
+  }
+  // a closed deal with no closing date used to crash the follow-up
+  // nudges for the whole office — catch it here instead.
+  if (status === 'closed' && !row.closing_date) {
+    return 'a closing date is required when a deal is closed'
   }
   return null
 }

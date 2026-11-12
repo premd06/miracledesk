@@ -151,10 +151,6 @@ function LoginPage({ onLoggedIn }) {
           </>
         )}
 
-        <p className="login-hint">
-          Demo logins — sam, jess, dan, priya, or broker. Password for all
-          of them is demo1234.
-        </p>
       </div>
     </div>
   )

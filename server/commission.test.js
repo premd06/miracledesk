@@ -2,7 +2,7 @@
 // run with: npm test (from the server folder)
 const test = require('node:test')
 const assert = require('node:assert')
-const { commission } = require('./commission')
+const { commission, validateSplitPlan } = require('./commission')
 
 test('flat split, no referral', () => {
   const result = commission(
@@ -52,4 +52,29 @@ test('tiered split, one deal crosses the cap', () => {
   // 10000 of room left under the cap = 14285.71 of the deal at 70%,
   // the rest at 90% -> 10000 + 9642.86 = 19642.86
   assert.equal(result.agentShare, 19642.86)
+})
+
+test('a good split plan passes, a bad one does not', () => {
+  assert.equal(validateSplitPlan('70'), null)
+  assert.equal(validateSplitPlan('70/90@100000'), null)
+  assert.equal(validateSplitPlan('95.5'), null)
+  assert.ok(validateSplitPlan('abc'))
+  assert.ok(validateSplitPlan('150'))
+  assert.ok(validateSplitPlan('0'))
+  assert.ok(validateSplitPlan('70/90'))
+  assert.ok(validateSplitPlan('70/90@0'))
+  assert.ok(validateSplitPlan('70/120@100000'))
+  assert.ok(validateSplitPlan('70/90/100@100000'))
+  assert.ok(validateSplitPlan(''))
+})
+
+test('a bad split plan throws instead of returning NaN', () => {
+  assert.throws(
+    () =>
+      commission(
+        { price: 1000000, commission_pct: 2.5, referral_pct: 0, split_plan: 'junk' },
+        0
+      ),
+    /bad split plan/
+  )
 })

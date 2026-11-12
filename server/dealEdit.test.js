@@ -27,11 +27,22 @@ test('a bad status or side is rejected', () => {
   )
 })
 
-test('a blank address and a negative referral % are rejected', () => {
+test('a blank address and a referral % outside 0–100 are rejected', () => {
   assert.equal(cleanDealUpdate({ address: '   ' }).error, 'address cannot be blank')
   assert.equal(
     cleanDealUpdate({ referral_pct: -1 }).error,
-    'referral % cannot be below 0'
+    'referral % has to be between 0 and 100'
+  )
+  assert.equal(
+    cleanDealUpdate({ referral_pct: 101 }).error,
+    'referral % has to be between 0 and 100'
+  )
+})
+
+test('a commission % over 100 is rejected', () => {
+  assert.equal(
+    cleanDealUpdate({ commission_pct: 150 }).error,
+    'commission % has to be between 0 and 100'
   )
 })
 

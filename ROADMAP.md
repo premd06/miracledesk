@@ -64,6 +64,7 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] broker accounts page: add an agent (name, username, email, starting password, split plan, yearly goal), see every account, reset anyone's password, turn an account off and back on
 - [x] change your own password from the sidebar — current password first
 - [x] rate limits: 10 failed logins per login in 15 minutes, 5 reset requests per email in an hour
+- [x] pilot fixes: first-broker setup script (the seed script is never the setup path), closed deals need a closing date, split plans + numbers get checked before they can break the office totals, changing your password logs your other devices out, no demo notes on the login screen / sidebar / TV board / income report, and the server warns on startup when email isn't set up
 
 ## later
 - [x] import deals from a csv (offices already have spreadsheets — nobody's re-typing history): upload on the Deals page, bad rows are skipped and reported back with a reason instead of killing the whole import

@@ -267,3 +267,30 @@ test('setting an agent goal updates it, and a bad goal or agent is rejected', ()
   )
   assert.equal(setAgentGoal(db, 99, 100000).error, 'no agent with that id')
 })
+
+test('a bad split plan is rejected and nothing is saved', () => {
+  const db = testDb()
+  for (const splitPlan of ['junk', '150', '70/90', '70/90@0', '70/120@100000']) {
+    const result = createAccount(db, {
+      name: 'Bad Plan',
+      username: 'badplan',
+      email: 'badplan@miracledesk.test',
+      password: 'a-real-password',
+      splitPlan,
+    })
+    assert.ok(result.error, splitPlan + ' should have been rejected')
+  }
+  assert.equal(
+    db.prepare('SELECT COUNT(*) AS n FROM agents').get().n,
+    2
+  )
+  // and a tiered plan that is fine still works
+  const good = createAccount(db, {
+    name: 'Good Plan',
+    username: 'goodplan',
+    email: 'goodplan@miracledesk.test',
+    password: 'a-real-password',
+    splitPlan: '70/90@100000',
+  })
+  assert.ok(good.account)
+})

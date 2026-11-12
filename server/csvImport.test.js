@@ -90,7 +90,7 @@ test('rowError flags the same problems POST /api/deals does', () => {
   )
   assert.equal(
     rowError({ address: '12 Maple Grove', price: '925000', commission_pct: '0', side: 'buyer', status: 'pending' }),
-    'commission % has to be a number over 0'
+    'commission % has to be between 0 and 100'
   )
   assert.equal(
     rowError({ address: '12 Maple Grove', price: '925000', commission_pct: '2.5', side: '', status: 'pending' }),
@@ -153,7 +153,7 @@ test('importDeals keeps a row with a city it does not know, just without a pin',
   const withUnknownCity = importDeals(
     db,
     'address,price,commission %,side,status,city\n' +
-      '48 Alderwood Dr,1180000,2.5,seller,closed,Georgetown\n',
+      '48 Alderwood Dr,1180000,2.5,seller,pending,Georgetown\n',
     1
   )
   assert.equal(withUnknownCity.importedIds.length, 1)
@@ -167,4 +167,43 @@ test('importDeals says so when the file is empty', () => {
   const db = testDb()
   assert.equal(importDeals(db, '', 1).error, 'the file is empty')
   assert.equal(importDeals(db, '   \n', 1).error, 'the file is empty')
+})
+
+test('a closed row with no closing date is skipped, not imported', () => {
+  assert.equal(
+    rowError({ address: '1 Main St', price: '900000', commission_pct: '2.5', side: 'buyer', status: 'closed' }),
+    'a closing date is required when a deal is closed'
+  )
+  const db = testDb()
+  const result = importDeals(
+    db,
+    'address,price,commission %,side,status\n' +
+      '1 Main St,900000,2.5,buyer,closed\n' +
+      '2 Oak Ave,800000,2.5,seller,closed\n',
+    1
+  )
+  // both rows are closed with no date, so nothing imports
+  assert.equal(result.importedIds.length, 0)
+  assert.equal(result.skipped.length, 2)
+  assert.equal(result.skipped[0].reason, 'a closing date is required when a deal is closed')
+})
+
+test('a bad side, a bad status, or a commission % over 100 is skipped', () => {
+  assert.equal(
+    rowError({ address: '1 Main St', price: '900000', commission_pct: '2.5', side: 'both', status: 'pending' }),
+    'side has to be buyer or seller'
+  )
+  assert.equal(
+    rowError({ address: '1 Main St', price: '900000', commission_pct: '2.5', side: 'buyer', status: 'sold' }),
+    'status has to be pending, conditional or closed'
+  )
+  assert.equal(
+    rowError({ address: '1 Main St', price: '900000', commission_pct: '150', side: 'buyer', status: 'pending' }),
+    'commission % has to be between 0 and 100'
+  )
+  // "Closed" with a capital still counts as closed, and it needs a date
+  assert.equal(
+    rowError({ address: '1 Main St', price: '900000', commission_pct: '2.5', side: 'Buyer', status: 'Closed' }),
+    'a closing date is required when a deal is closed'
+  )
 })

@@ -122,7 +122,6 @@ function TvBoard() {
       </ol>
 
       <footer className="tv-footer">
-        <span>Sample data</span>
         <span>
           Updated {updatedText} · refreshes every minute
         </span>

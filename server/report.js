@@ -94,8 +94,7 @@ function buildIncomeReport(agent, deals) {
     </table>`
   }
 
-  <p class="note">Sample data only — this is a demo report, not a real earnings
-  statement. The tax set-aside is a rough rule of thumb, not tax advice.</p>
+  <p class="note">The tax set-aside is a rough rule of thumb, not tax advice.</p>
 </body>
 </html>`
 }

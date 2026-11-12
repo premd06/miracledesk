@@ -29,8 +29,8 @@ function cleanDealUpdate(body) {
 
   if (body.commission_pct !== undefined) {
     const pct = Number(body.commission_pct)
-    if (!pct || pct <= 0) {
-      return { error: 'commission % has to be a number above 0' }
+    if (!pct || pct <= 0 || pct > 100) {
+      return { error: 'commission % has to be between 0 and 100' }
     }
     updates.commission_pct = pct
   }
@@ -51,8 +51,8 @@ function cleanDealUpdate(body) {
 
   if (body.referral_pct !== undefined) {
     const referral = Number(body.referral_pct)
-    if (isNaN(referral) || referral < 0) {
-      return { error: 'referral % cannot be below 0' }
+    if (isNaN(referral) || referral < 0 || referral > 100) {
+      return { error: 'referral % has to be between 0 and 100' }
     }
     updates.referral_pct = referral
   }

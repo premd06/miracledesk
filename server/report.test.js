@@ -48,7 +48,11 @@ test('report page shows the agent, the totals and the deals', () => {
   assert.match(html, /\$15,750\.00/) // net earned
   assert.match(html, /12 Test St, Brampton/)
   assert.match(html, /Yearly goal/)
-  assert.match(html, /Sample data only/)
+  // the report must not say it's sample data any more — a real
+  // agent hands this to a bank, and "demo report" on it would
+  // make the whole thing look fake. the tax note stays.
+  assert.doesNotMatch(html, /Sample data/)
+  assert.match(html, /rough rule of thumb, not tax advice/)
 })
 
 test('report with no closed deals still renders', () => {

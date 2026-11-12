@@ -44,12 +44,13 @@ function BrokerView() {
     return <p className="table-note">Loading office numbers…</p>
   }
 
-  // deals closing in the current month, whatever their status
+  // deals closing in the current month, whatever their status.
+  // a deal with no closing date yet just isn't in this list.
   const now = new Date()
   const thisMonth =
     now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0')
-  const closingThisMonth = deals.filter((deal) =>
-    deal.closing_date.startsWith(thisMonth)
+  const closingThisMonth = deals.filter(
+    (deal) => deal.closing_date && deal.closing_date.startsWith(thisMonth)
   )
 
   // the export link: blank dates mean the whole list, same as the api.

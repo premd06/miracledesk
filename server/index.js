@@ -6,12 +6,12 @@ const db = require('./db')
 const { commission } = require('./commission')
 const { computeBadges, buildFeed } = require('./badges')
 const { buildIncomeReport } = require('./report')
-const { loginUser, getUser, logout } = require('./auth')
+const { loginUser, getUser, logout, logoutOthers } = require('./auth')
 const {
   requestPasswordReset,
   resetPassword,
 } = require('./passwordReset')
-const { sendResetEmail } = require('./mailer')
+const { sendResetEmail, smtpConfigured } = require('./mailer')
 const {
   listAccounts,
   createAccount,
@@ -280,7 +280,9 @@ app.patch('/api/agents/:id/goal', (req, res) => {
 
 // change your own password: the current one has to be right, and
 // the new one has to be at least 8 characters. anyone logged in can
-// use this — agent or broker.
+// use this — agent or broker. changing it logs you out on your
+// other devices (phone, another laptop) but not this one — if the
+// password leaked, the leak stops here.
 app.post('/api/change-password', (req, res) => {
   const body = req.body || {}
   const result = changePassword(
@@ -292,6 +294,8 @@ app.post('/api/change-password', (req, res) => {
   if (result.error) {
     return res.status(400).json({ error: result.error })
   }
+  const token = (req.headers.authorization || '').replace('Bearer ', '')
+  logoutOthers(db, req.user.id, token)
   res.json({ ok: true })
 })
 
@@ -706,7 +710,11 @@ app.get('/api/nudges', (req, res) => {
         )
         .all()
 
+  // a closed deal with no closing date has no anniversary to work
+  // out — skip it instead of crashing the whole list. (closed deals
+  // need a closing date now, but old rows might not have one.)
   const anniversaries = dealRows
+    .filter((deal) => deal.closing_date)
     .map((deal) => {
       const monthDay = deal.closing_date.slice(5)
       let year = today.getFullYear()
@@ -893,10 +901,37 @@ app.post('/api/deals', (req, res) => {
       .status(400)
       .json({ error: 'address, side and status are required' })
   }
-  if (!agentId || !price || price <= 0 || !commissionPct || commissionPct <= 0) {
+  if (body.side !== 'buyer' && body.side !== 'seller') {
     return res
       .status(400)
-      .json({ error: 'a valid agent, price and commission % are required' })
+      .json({ error: 'side has to be buyer or seller' })
+  }
+  if (
+    body.status !== 'pending' &&
+    body.status !== 'conditional' &&
+    body.status !== 'closed'
+  ) {
+    return res.status(400).json({
+      error: 'status has to be pending, conditional or closed',
+    })
+  }
+  if (!agentId || !price || price <= 0 || !commissionPct || commissionPct <= 0 || commissionPct > 100) {
+    return res.status(400).json({
+      error: 'a valid agent, price and commission % (0–100) are required',
+    })
+  }
+  const referralPct = Number(body.referral_pct) || 0
+  if (referralPct < 0 || referralPct > 100) {
+    return res
+      .status(400)
+      .json({ error: 'referral % has to be between 0 and 100' })
+  }
+  // a closed deal with no closing date used to crash the follow-up
+  // nudges for the whole office — it can't be saved like that now.
+  if (body.status === 'closed' && !body.closing_date) {
+    return res.status(400).json({
+      error: 'a closing date is required when a deal is closed',
+    })
   }
   const agent = db
     .prepare('SELECT * FROM agents WHERE id = ?')
@@ -923,7 +958,7 @@ app.post('/api/deals', (req, res) => {
       body.condition_deadline || null,
       body.status,
       body.source || null,
-      Number(body.referral_pct) || 0,
+      referralPct,
       Number(body.lat) || null,
       Number(body.lng) || null
     )
@@ -990,6 +1025,20 @@ app.patch('/api/deals/:id', (req, res) => {
     return res.status(400).json({ error })
   }
 
+  // same rule as adding a deal: whatever the deal ends up as, a
+  // closed deal needs a closing date — the one in the edit, or the
+  // one it already had.
+  const finalStatus = updates.status || deal.status
+  const finalClosingDate =
+    updates.closing_date !== undefined
+      ? updates.closing_date
+      : deal.closing_date
+  if (finalStatus === 'closed' && !finalClosingDate) {
+    return res.status(400).json({
+      error: 'a closing date is required when a deal is closed',
+    })
+  }
+
   const columns = Object.keys(updates)
   const setClause = columns.map((column) => `${column} = ?`).join(', ')
   db.prepare(`UPDATE deals SET ${setClause} WHERE id = ?`).run(
@@ -1026,4 +1075,19 @@ function round(n) {
 
 app.listen(PORT, () => {
   console.log(`server running on http://localhost:${PORT}`)
+  // worth shouting about on startup: without SMTP, password-reset
+  // emails don't send (the link just prints to this log), and
+  // without RESET_BASE_URL the link points at localhost, which is
+  // useless on a real server. both are fine for local testing —
+  // this is just here so nobody deploys without noticing.
+  if (!smtpConfigured()) {
+    console.log(
+      'warning: no SMTP set up (SMTP_HOST/SMTP_USER/SMTP_PASS) — password-reset emails will not send, the link only prints to this log'
+    )
+  }
+  if (!process.env.RESET_BASE_URL) {
+    console.log(
+      'warning: RESET_BASE_URL is not set — reset links will point at http://localhost:5173'
+    )
+  }
 })

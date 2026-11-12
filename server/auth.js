@@ -152,6 +152,20 @@ function logoutAll(db, userId) {
   db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId)
 }
 
+// log one user out everywhere except this login — used when someone
+// changes their own password. if the password leaked, the other
+// devices stop working, but the device you're on right now keeps
+// working so you don't get kicked out mid-click.
+function logoutOthers(db, userId, token) {
+  if (!token) {
+    logoutAll(db, userId)
+    return
+  }
+  db.prepare(
+    'DELETE FROM sessions WHERE user_id = ? AND token_hash != ?'
+  ).run(userId, hashToken(token))
+}
+
 module.exports = {
   SESSION_TTL_MS,
   MIN_PASSWORD_LENGTH,
@@ -163,4 +177,5 @@ module.exports = {
   getUser,
   logout,
   logoutAll,
+  logoutOthers,
 }

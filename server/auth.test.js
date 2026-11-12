@@ -14,6 +14,7 @@ const {
   loginUser,
   getUser,
   logout,
+  logoutOthers,
 } = require('./auth')
 
 test('a password hashes and checks, a wrong one does not', () => {
@@ -197,4 +198,16 @@ test('a deactivated account cannot log in, and its old token stops working', () 
   db.prepare('UPDATE users SET active = 0 WHERE username = ?').run('sam')
   assert.equal(loginUser(db, 'sam', 'demo1234'), null)
   assert.equal(getUser(db, result.token), null)
+})
+
+test('logging out everywhere else keeps this login working', () => {
+  const db = testDb()
+  const first = loginUser(db, 'sam', 'demo1234')
+  const second = loginUser(db, 'sam', 'demo1234')
+  // two logins, same person, different tokens
+  assert.notEqual(first.token, second.token)
+  // "log me out everywhere else" from the first one
+  logoutOthers(db, first.user.id, first.token)
+  assert.ok(getUser(db, first.token))
+  assert.equal(getUser(db, second.token), null)
 })

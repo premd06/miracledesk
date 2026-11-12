@@ -11,6 +11,7 @@ const {
   logoutAll,
   MIN_PASSWORD_LENGTH,
 } = require('./auth')
+const { validateSplitPlan } = require('./commission')
 
 // the split and goal a new agent starts with when the broker doesn't
 // say otherwise. they're just the middle of the road — the broker
@@ -81,6 +82,12 @@ function createAccount(db, fields) {
   }
   if (yearlyGoal <= 0) {
     return { error: 'the yearly goal has to be more than 0' }
+  }
+  // a bad split plan used to save fine and then break every office
+  // total with NaN — check the shape here, before it gets stored.
+  const planError = validateSplitPlan(splitPlan)
+  if (planError) {
+    return { error: planError }
   }
   if (findAccount(db, username, email)) {
     return { error: 'that username or email is already taken' }
