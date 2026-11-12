@@ -14,8 +14,8 @@ const {
 
 // the split and goal a new agent starts with when the broker doesn't
 // say otherwise. they're just the middle of the road — the broker
-// can pick different ones in the form, and the per-agent goals
-// feature (still to come) will make the goal editable later.
+// can pick different ones in the form, and change the goal later
+// from the Accounts page (setAgentGoal below).
 const DEFAULT_SPLIT_PLAN = '70'
 const DEFAULT_YEARLY_GOAL = 150000
 
@@ -27,7 +27,7 @@ function listAccounts(db) {
     .prepare(
       `SELECT users.id, users.username, users.email, users.role,
               users.active, users.agent_id,
-              agents.name AS agent_name
+              agents.name AS agent_name, agents.yearly_goal
        FROM users LEFT JOIN agents ON users.agent_id = agents.id
        ORDER BY agents.name IS NULL, agents.name, users.username`
     )
@@ -39,6 +39,7 @@ function listAccounts(db) {
       email: row.email,
       role: row.role,
       agentId: row.agent_id,
+      yearlyGoal: row.yearly_goal === null ? null : row.yearly_goal,
       active: row.active !== 0,
     }))
 }
@@ -150,6 +151,32 @@ function setAccountActive(db, userId, active) {
   return { ok: true }
 }
 
+// set one agent's yearly goal. the office goal on the dashboard is
+// just the sum of everyone's goal, so changing one person's goal
+// moves the office goal too — and the leaderboard shows each agent
+// against their own goal straight away. the goal has to be a real
+// number over 0; an agent always has a goal, there's no "unset".
+function setAgentGoal(db, agentId, yearlyGoal) {
+  const goal = Number(yearlyGoal)
+  if (!yearlyGoal || !goal || goal <= 0) {
+    return { error: 'the yearly goal has to be a number over 0' }
+  }
+  const agent = db
+    .prepare('SELECT * FROM agents WHERE id = ?')
+    .get(agentId)
+  if (!agent) {
+    return { error: 'no agent with that id' }
+  }
+  db.prepare('UPDATE agents SET yearly_goal = ? WHERE id = ?').run(
+    goal,
+    agentId
+  )
+  return {
+    ok: true,
+    agent: { id: agent.id, name: agent.name, yearly_goal: goal },
+  }
+}
+
 // change your own password: the current one has to be right first,
 // and the new one has to be at least 8 characters. your current
 // login keeps working — this is you changing your own password,
@@ -180,5 +207,6 @@ module.exports = {
   createAccount,
   resetAccountPassword,
   setAccountActive,
+  setAgentGoal,
   changePassword,
 }

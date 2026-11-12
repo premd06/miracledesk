@@ -23,6 +23,9 @@ function AccountsPage() {
   const [resettingId, setResettingId] = useState(null)
   const [resetPassword, setResetPassword] = useState('')
   const [note, setNote] = useState('')
+  // which agent's yearly goal is being edited, and what it's set to
+  const [editingGoalId, setEditingGoalId] = useState(null)
+  const [goalValue, setGoalValue] = useState('')
 
   function loadAccounts() {
     apiFetch('/api/accounts')
@@ -99,6 +102,33 @@ function AccountsPage() {
         setResettingId(null)
         setResetPassword('')
         setNote(`Password reset for ${account.name} — their old password no longer works.`)
+      })
+      .catch((err) => setError(err.message))
+  }
+
+  function handleSaveGoal(account) {
+    setError('')
+    setNote('')
+
+    apiFetch(`/api/agents/${account.agentId}/goal`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ yearlyGoal: Number(goalValue) }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || 'could not save the goal')
+        }
+        return res.json()
+      })
+      .then((updated) => {
+        setEditingGoalId(null)
+        setGoalValue('')
+        setNote(
+          `${account.name}'s yearly goal is now $${updated.yearly_goal.toLocaleString()} — the office goal moved with it.`
+        )
+        loadAccounts()
       })
       .catch((err) => setError(err.message))
   }
@@ -237,6 +267,7 @@ function AccountsPage() {
                 <th>Username</th>
                 <th>Email</th>
                 <th>Role</th>
+                <th>Yearly goal</th>
                 <th>Status</th>
                 <th>Password</th>
                 <th>Account</th>
@@ -249,6 +280,49 @@ function AccountsPage() {
                   <td>{account.username}</td>
                   <td>{account.email || '—'}</td>
                   <td>{account.role}</td>
+                  <td>
+                    {account.agentId === null ? (
+                      '—'
+                    ) : editingGoalId === account.id ? (
+                      <span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={goalValue}
+                          onChange={(e) => setGoalValue(e.target.value)}
+                          style={{ width: '110px' }}
+                        />{' '}
+                        <button
+                          type="button"
+                          onClick={() => handleSaveGoal(account)}
+                        >
+                          Save
+                        </button>{' '}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingGoalId(null)
+                            setGoalValue('')
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </span>
+                    ) : (
+                      <span>
+                        ${account.yearlyGoal.toLocaleString()}{' '}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingGoalId(account.id)
+                            setGoalValue(String(account.yearlyGoal))
+                          }}
+                        >
+                          Change
+                        </button>
+                      </span>
+                    )}
+                  </td>
                   <td>{account.active ? 'Active' : 'Deactivated'}</td>
                   <td>
                     {resettingId === account.id ? (

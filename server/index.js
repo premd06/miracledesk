@@ -17,6 +17,7 @@ const {
   createAccount,
   resetAccountPassword,
   setAccountActive,
+  setAgentGoal,
   changePassword,
 } = require('./accounts')
 const { createLimiter } = require('./rateLimit')
@@ -257,6 +258,24 @@ app.post('/api/accounts/:id/active', (req, res) => {
     return res.status(400).json({ error: result.error })
   }
   res.json({ ok: true })
+})
+
+// set one agent's yearly goal. broker only — an agent can't raise
+// their own target to make the leaderboard look better. the office
+// goal is the sum of everyone's goals, so this moves that too.
+app.patch('/api/agents/:id/goal', (req, res) => {
+  if (!requireBroker(req, res)) {
+    return
+  }
+  const result = setAgentGoal(
+    db,
+    Number(req.params.id),
+    (req.body || {}).yearlyGoal
+  )
+  if (result.error) {
+    return res.status(400).json({ error: result.error })
+  }
+  res.json(result.agent)
 })
 
 // change your own password: the current one has to be right, and

@@ -9,6 +9,7 @@ const {
   createAccount,
   resetAccountPassword,
   setAccountActive,
+  setAgentGoal,
   changePassword,
 } = require('./accounts')
 
@@ -236,4 +237,33 @@ test('changing to a short password is rejected and the old one still works', () 
     'password must be at least 8 characters'
   )
   assert.ok(loginUser(db, 'sam', 'demo1234'))
+})
+
+test('setting an agent goal updates it, and a bad goal or agent is rejected', () => {
+  const db = testDb()
+  const result = setAgentGoal(db, 1, 200000)
+  assert.deepEqual(result, {
+    ok: true,
+    agent: { id: 1, name: 'Sam Patel', yearly_goal: 200000 },
+  })
+  assert.equal(
+    db.prepare('SELECT yearly_goal FROM agents WHERE id = 1').get()
+      .yearly_goal,
+    200000
+  )
+
+  // a goal has to be a real number over 0 — and a failed try
+  // leaves the goal exactly where it was
+  assert.equal(setAgentGoal(db, 1, 0).error, 'the yearly goal has to be a number over 0')
+  assert.equal(setAgentGoal(db, 1, -5000).error, 'the yearly goal has to be a number over 0')
+  assert.equal(
+    setAgentGoal(db, 1, 'lots').error,
+    'the yearly goal has to be a number over 0'
+  )
+  assert.equal(
+    db.prepare('SELECT yearly_goal FROM agents WHERE id = 1').get()
+      .yearly_goal,
+    200000
+  )
+  assert.equal(setAgentGoal(db, 99, 100000).error, 'no agent with that id')
 })

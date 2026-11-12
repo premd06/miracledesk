@@ -126,6 +126,9 @@ function BrokerView() {
               <span className="recent-price">
                 {money(agent.netThisYear)}
               </span>
+              <span className="recent-status">
+                of {money(agent.goal)} goal · {agent.goalProgress}%
+              </span>
             </div>
           ))}
         </div>

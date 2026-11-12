@@ -55,6 +55,14 @@ the broker has an Accounts page in the sidebar (agents never see it). from there
 
 two small limits keep the login safe: 10 wrong passwords for one login in 15 minutes gets a "try again in a few minutes" (a good login clears the count, so a typo doesn't count against you), and 5 reset requests for one email in an hour. they're counted in the server's memory — fine for one server.
 
+## importing deals, sorting the table, per-agent goals
+
+moving off a spreadsheet? on the Deals page there's an "Import deals from a CSV" form — pick a file and whose deals they are, and the server adds the good rows. the columns it wants are: address, price, commission %, side, status, closing date, city (optional). a row with a problem is skipped, not the whole file — it tells you which row and why, so you can fix the file and try again. agents can only import their own deals; the broker can import for anyone.
+
+the deals table sorts now: click Address, Price, Net or Closing date to sort by it, click the same one again to flip it. the little arrow shows which column and which way.
+
+every agent has their own yearly goal (the office goal is just everyone's added up). the broker can change one from the Accounts page — there's a goal column with a Change button — and the leaderboard shows each agent against their own goal. an agent's dashboard goal bar uses their own goal too.
+
 ## status
 
 just started (oct 2026). building it in small commits, same as my other projects — the plan is in ROADMAP.md.
