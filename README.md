@@ -39,6 +39,14 @@ cd client && npm install && npm run dev   # localhost:5173
 
 the seed script (`cd server && node seed.js`) makes a login for each sample agent, plus a broker login. they all use the password **demo1234** — it's the same for everyone because this is sample data, and the database only stores the password's hash, never the password itself. usernames: `sam`, `jess`, `dan`, `priya` (agents), `broker` (sees the whole office).
 
+## log in with email, forgot password
+
+you can log in with your username or your email — same password either way. every account has an email on it now (the sample ones are `sam@miracledesk.test` and so on).
+
+forgot your password? there's a link on the login screen. type your email in and a reset link goes out — it works for one hour and only once, and the reply is always the same whether or not the email is registered, so nobody can fish for real accounts. the database only ever stores a hash of the link, never the link itself.
+
+honest bit: the reset email only actually sends once the server has SMTP set up. put these in the environment and it sends for real: `SMTP_HOST`, `SMTP_PORT` (587 if you leave it out), `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` (defaults to SMTP_USER), `RESET_BASE_URL` (where the reset link points — `http://localhost:5173` when you're running it locally). with no SMTP, the reset link just gets printed to the server console instead, so the flow still works for testing — check the log.
+
 ## status
 
 just started (oct 2026). building it in small commits, same as my other projects — the plan is in ROADMAP.md.

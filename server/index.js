@@ -7,6 +7,11 @@ const { commission } = require('./commission')
 const { computeBadges, buildFeed } = require('./badges')
 const { buildIncomeReport } = require('./report')
 const { loginUser, getUser, logout } = require('./auth')
+const {
+  requestPasswordReset,
+  resetPassword,
+} = require('./passwordReset')
+const { sendResetEmail } = require('./mailer')
 const { cleanDealUpdate } = require('./dealEdit')
 const {
   visibleAgentId,
@@ -23,7 +28,14 @@ app.use(express.json())
 // /api/logout, /api/me and /api/health stay open — everything else
 // goes through requireLogin, so no route can forget to check.
 // the token comes in as "Authorization: Bearer <token>".
-const OPEN_ROUTES = ['/login', '/logout', '/me', '/health']
+const OPEN_ROUTES = [
+  '/login',
+  '/logout',
+  '/me',
+  '/health',
+  '/forgot-password',
+  '/reset-password',
+]
 app.use('/api', (req, res, next) => {
   if (OPEN_ROUTES.includes(req.path)) {
     return next()
@@ -58,9 +70,10 @@ app.get('/api/health', (req, res) => {
 })
 
 // log in: send { username, password } and get back a token plus who
-// you are (name, role, agent id). the token goes in the
-// Authorization header on later calls. wrong password or unknown
-// username is a 401 with no hint about which one was wrong.
+// you are (name, role, agent id). the username field takes a username
+// or an email — both work. the token goes in the Authorization
+// header on later calls. wrong password or unknown login is a 401
+// with no hint about which one was wrong.
 app.post('/api/login', (req, res) => {
   const body = req.body || {}
   const result = loginUser(db, body.username, body.password)
@@ -68,6 +81,49 @@ app.post('/api/login', (req, res) => {
     return res.status(401).json({ error: 'wrong username or password' })
   }
   res.json(result)
+})
+
+// forgot password: send { email } and, if that email belongs to an
+// account, a reset link goes out. the answer is always the same
+// sentence either way — saying "no account with that email" would
+// let anyone check which emails are registered here. the link points
+// at the frontend's reset page, with the token in the url.
+app.post('/api/forgot-password', async (req, res) => {
+  const body = req.body || {}
+  const reset = requestPasswordReset(db, body.email)
+  if (reset) {
+    const base = (process.env.RESET_BASE_URL || 'http://localhost:5173').replace(
+      /\/$/,
+      ''
+    )
+    const resetUrl = `${base}/reset-password?token=${reset.token}`
+    try {
+      await sendResetEmail(reset.email, resetUrl)
+    } catch (err) {
+      // the mail server being down shouldn't tell the browser
+      // anything different — the link is still in the server log
+      // when there's no smtp, and the token stays usable for its hour.
+      console.log(`could not send reset email: ${err.message}`)
+    }
+  }
+  res.json({
+    ok: true,
+    message:
+      'If an account with that email exists, a reset link has been sent.',
+  })
+})
+
+// reset the password: send { token, password } from the reset page.
+// a bad, used, or expired token is a 400, and so is a password
+// shorter than 8 characters. on success the new password works
+// straight away and the old one stops working.
+app.post('/api/reset-password', (req, res) => {
+  const body = req.body || {}
+  const result = resetPassword(db, body.token, body.password)
+  if (result.error) {
+    return res.status(400).json({ error: result.error })
+  }
+  res.json({ ok: true })
 })
 
 // who am I, from the token. the frontend calls this when it loads so

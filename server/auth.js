@@ -38,14 +38,19 @@ function makeToken() {
 const sessions = new Map()
 
 // returns { token, user } on a good login, null on a bad one. the
-// username lookup is case-insensitive so "Sam" and "sam" both work.
-function loginUser(db, username, password) {
-  if (!username || !password) {
+// first field takes a username or an email — whichever the person
+// typed — and both lookups are case-insensitive so "Sam",
+// "sam" and "sam@miracledesk.test" all find the same account.
+function loginUser(db, login, password) {
+  if (!login || !password) {
     return null
   }
   const user = db
-    .prepare('SELECT * FROM users WHERE username = ? COLLATE NOCASE')
-    .get(username.trim())
+    .prepare(
+      `SELECT * FROM users
+       WHERE username = ? COLLATE NOCASE OR email = ? COLLATE NOCASE`
+    )
+    .get(login.trim(), login.trim())
   if (!user) {
     return null
   }

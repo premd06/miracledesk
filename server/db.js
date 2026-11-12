@@ -53,10 +53,19 @@ db.exec(`
     id INTEGER PRIMARY KEY,
     agent_id INTEGER,
     username TEXT NOT NULL UNIQUE,
+    email TEXT,
     password_salt TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL,
     FOREIGN KEY (agent_id) REFERENCES agents (id)
+  );
+  CREATE TABLE IF NOT EXISTS password_resets (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    used_at INTEGER,
+    FOREIGN KEY (user_id) REFERENCES users (id)
   );
 `)
 
@@ -76,5 +85,21 @@ if (!dealColumns.includes('lat')) {
 if (!dealColumns.includes('lng')) {
   db.exec('ALTER TABLE deals ADD COLUMN lng REAL')
 }
+
+// the users table started without an email column, so add it to
+// databases that were made before this change — same pattern as the
+// deal columns above. the unique index keeps two accounts from
+// sharing one email, and it skips the nulls so old rows without an
+// email don't clash with each other.
+const userColumns = db
+  .prepare('PRAGMA table_info(users)')
+  .all()
+  .map((column) => column.name)
+if (!userColumns.includes('email')) {
+  db.exec('ALTER TABLE users ADD COLUMN email TEXT')
+}
+db.exec(
+  'CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)'
+)
 
 module.exports = db

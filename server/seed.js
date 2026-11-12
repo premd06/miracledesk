@@ -55,18 +55,23 @@ const clients = [
 // (demo1234) and it's only in here because this is sample data —
 // real passwords would never be written down like this, and the
 // database only ever stores the hash, never the password itself.
+// the emails are fake too (a .test domain, so nothing real can
+// collide with them) — they exist so the email login and the
+// forgot-password flow have something to work with.
 const logins = [
-  // agent id, username, role
-  [1, 'sam', 'agent'],
-  [2, 'jess', 'agent'],
-  [3, 'dan', 'agent'],
-  [4, 'priya', 'agent'],
-  [null, 'broker', 'broker'],
+  // agent id, username, email, role
+  [1, 'sam', 'sam@miracledesk.test', 'agent'],
+  [2, 'jess', 'jess@miracledesk.test', 'agent'],
+  [3, 'dan', 'dan@miracledesk.test', 'agent'],
+  [4, 'priya', 'priya@miracledesk.test', 'agent'],
+  [null, 'broker', 'broker@miracledesk.test', 'broker'],
 ]
 
 // checklist rows point at deals, and clients point at agents, so wipe
 // the children first or sqlite complains about the foreign keys.
-// users point at agents too, so they go first as well.
+// users point at agents too, so they go first as well — and reset
+// rows point at users, so they go before the users do.
+db.exec('DELETE FROM password_resets')
 db.exec('DELETE FROM users')
 db.exec('DELETE FROM checklist_items')
 db.exec('DELETE FROM deals')
@@ -100,12 +105,12 @@ for (const client of clients) {
 
 const insertUser = db.prepare(
   `INSERT INTO users
-   (agent_id, username, password_salt, password_hash, role)
-   VALUES (?, ?, ?, ?, ?)`
+   (agent_id, username, email, password_salt, password_hash, role)
+   VALUES (?, ?, ?, ?, ?, ?)`
 )
-for (const [agentId, username, role] of logins) {
+for (const [agentId, username, email, role] of logins) {
   const { salt, hash } = hashPassword('demo1234')
-  insertUser.run(agentId, username, salt, hash, role)
+  insertUser.run(agentId, username, email, salt, hash, role)
 }
 
 const agentCount = db.prepare('SELECT COUNT(*) AS n FROM agents').get().n

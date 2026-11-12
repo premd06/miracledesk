@@ -59,6 +59,7 @@ professional, like something an office would actually use. clean tables, numbers
 
 ## accounts
 - [x] real login: agents log in and only see their own deals, the broker sees everything. hashed passwords, roles checked on the server, not just hidden in the frontend
+- [x] log in with email or username + forgot-password reset: a one-time link, good for an hour, emailed when SMTP is set up — otherwise the link prints to the server log so the flow still works for testing
 
 ## later
 - [ ] import deals from a csv (offices already have spreadsheets — nobody's re-typing history)

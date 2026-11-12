@@ -40,6 +40,7 @@ function testDb() {
       id INTEGER PRIMARY KEY,
       agent_id INTEGER,
       username TEXT NOT NULL UNIQUE,
+      email TEXT,
       password_salt TEXT NOT NULL,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL
@@ -48,8 +49,8 @@ function testDb() {
   db.prepare("INSERT INTO agents (id, name) VALUES (1, 'Sam Patel')").run()
   const { salt, hash } = hashPassword('demo1234')
   db.prepare(
-    `INSERT INTO users (agent_id, username, password_salt, password_hash, role)
-     VALUES (1, 'sam', ?, ?, 'agent')`
+    `INSERT INTO users (agent_id, username, email, password_salt, password_hash, role)
+     VALUES (1, 'sam', 'sam@miracledesk.test', ?, ?, 'agent')`
   ).run(salt, hash)
   return db
 }
