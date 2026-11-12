@@ -27,6 +27,21 @@ function DealsTable({ refreshKey }) {
   const [editStatus, setEditStatus] = useState('pending')
   const [editClosingDate, setEditClosingDate] = useState('')
   const [editError, setEditError] = useState('')
+  // which column the table is sorted by, and which way. nothing
+  // sorted means the server's order (by agent, then sold date).
+  const [sortKey, setSortKey] = useState(null)
+  const [sortDir, setSortDir] = useState(1)
+
+  // click a header to sort by it — click the same one again to
+  // flip it, click a different one to start over ascending.
+  function changeSort(key) {
+    if (sortKey === key) {
+      setSortDir((dir) => -dir)
+    } else {
+      setSortKey(key)
+      setSortDir(1)
+    }
+  }
 
   function loadDeals() {
     apiFetch('/api/deals')
@@ -162,6 +177,33 @@ function DealsTable({ refreshKey }) {
     )
   })
 
+  // sorting happens on the filtered list, so a search and a sort
+  // work together. closing dates are yyyy-mm-dd, so they sort as
+  // plain text; a deal with no closing date sinks to the bottom.
+  function compareDeals(a, b) {
+    if (sortKey === 'address') {
+      return sortDir * a.address.localeCompare(b.address)
+    }
+    if (sortKey === 'price' || sortKey === 'net') {
+      return sortDir * (a[sortKey] - b[sortKey])
+    }
+    if (sortKey === 'closing_date') {
+      if (!a.closing_date) return 1
+      if (!b.closing_date) return -1
+      return sortDir * a.closing_date.localeCompare(b.closing_date)
+    }
+    return 0
+  }
+  const sorted = sortKey ? [...shown].sort(compareDeals) : shown
+
+  // the little arrow on the column being sorted — ▲ up, ▼ down.
+  function sortArrow(key) {
+    if (sortKey !== key) {
+      return ''
+    }
+    return sortDir === 1 ? ' ▲' : ' ▼'
+  }
+
   return (
     <>
       <div className="table-filters">
@@ -197,17 +239,25 @@ function DealsTable({ refreshKey }) {
         <table className="deals-table">
       <thead>
         <tr>
-          <th>Address</th>
-          <th>Price</th>
+          <th className="sortable" onClick={() => changeSort('address')}>
+            Address{sortArrow('address')}
+          </th>
+          <th className="sortable" onClick={() => changeSort('price')}>
+            Price{sortArrow('price')}
+          </th>
           <th>Side</th>
           <th>Gross</th>
-          <th>Net</th>
+          <th className="sortable" onClick={() => changeSort('net')}>
+            Net{sortArrow('net')}
+          </th>
           <th>Status</th>
-          <th>Closing date</th>
+          <th className="sortable" onClick={() => changeSort('closing_date')}>
+            Closing date{sortArrow('closing_date')}
+          </th>
         </tr>
       </thead>
       <tbody>
-        {shown.map((deal) => (
+        {sorted.map((deal) => (
           <Fragment key={deal.id}>
             <tr
               className="deal-row"
