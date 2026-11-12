@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { apiFetch } from './api'
 import './App.css'
 import AddDealForm from './AddDealForm'
+import ImportDealsForm from './ImportDealsForm'
 import ClientsPage from './ClientsPage'
 import DealsTable from './DealsTable'
 import NudgesPanel from './NudgesPanel'
@@ -269,6 +270,7 @@ function App() {
         {page === 'Deals' && (
           <>
             <AddDealForm onAdded={() => setDealsVersion((v) => v + 1)} />
+            <ImportDealsForm onAdded={() => setDealsVersion((v) => v + 1)} />
             <section className="deals-section">
               <DealsTable refreshKey={dealsVersion} />
             </section>

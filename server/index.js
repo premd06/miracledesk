@@ -28,6 +28,7 @@ const { createLimiter } = require('./rateLimit')
 const loginLimiter = createLimiter(15 * 60 * 1000, 10)
 const forgotLimiter = createLimiter(60 * 60 * 1000, 5)
 const { cleanDealUpdate } = require('./dealEdit')
+const { importDeals } = require('./csvImport')
 const {
   visibleAgentId,
   canCreateFor,
@@ -912,6 +913,41 @@ app.post('/api/deals', (req, res) => {
   // deals before this one, then pick the new deal out of it.
   const created = dealsWithMath().find((deal) => deal.id === result.lastInsertRowid)
   res.status(201).json(created)
+})
+
+// import deals from a csv: send { csv, agent_id } where csv is the
+// file text. the good rows get added, the bad ones are skipped and
+// reported back with a reason, so the broker can fix the file and
+// try again. same role rule as adding one deal — an agent can only
+// import their own deals, the broker can import for anyone.
+app.post('/api/deals/import', (req, res) => {
+  const body = req.body || {}
+  const agentId = Number(body.agent_id)
+
+  if (!canCreateFor(req.user, agentId)) {
+    return res
+      .status(403)
+      .json({ error: 'you can only add deals for yourself' })
+  }
+  if (!agentId) {
+    return res.status(400).json({ error: 'an agent is required' })
+  }
+  const agent = db.prepare('SELECT * FROM agents WHERE id = ?').get(agentId)
+  if (!agent) {
+    return res.status(400).json({ error: 'no agent with that id' })
+  }
+
+  const result = importDeals(db, body.csv, agentId)
+  if (result.error) {
+    return res.status(400).json({ error: result.error })
+  }
+
+  // run the whole list through the math so the new deals come back
+  // with their numbers worked out, same as adding one deal.
+  const imported = dealsWithMath().filter((deal) =>
+    result.importedIds.includes(deal.id)
+  )
+  res.status(201).json({ imported, skipped: result.skipped })
 })
 
 // edit a deal — fix a typo'd price, change the status, move the
