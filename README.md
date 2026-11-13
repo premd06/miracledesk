@@ -65,6 +65,21 @@ the seed script is only for playing around — it wipes the whole database. a re
 4. for password resets to actually email people, set the SMTP settings from the section above, plus `RESET_BASE_URL` to the address agents open the app at (like `https://miracledesk.ca`) — without it, reset links point at localhost. the server says so on startup if either one is missing.
 5. never run `node seed.js` against a real office's database — it deletes every deal, client, account and login in it.
 
+## pilot readiness
+
+the first full check (nov 12) found six things that had to be fixed before a real office could use this. I fixed them all, then ran the whole check again on nov 13 and tested each one live — here's where it stands:
+
+- the setup script makes the first broker account on an empty database, and refuses if any account already exists. the seed script is never the setup path.
+- a closed deal can't save without a closing date — not from the form, not from an edit, not from a csv import (the bad row gets skipped and tells you why). the follow-ups page doesn't crash if a dateless closed deal somehow gets in there anyway.
+- bad split plans get rejected instead of breaking the office totals — "abc" or a rate over 100 won't save, on the accounts page or anywhere else.
+- changing your password logs your other devices out on the spot. the device you're on keeps working.
+- there's no demo text left on the login screen, the sidebar, the TV board or the income report.
+- the server warns on startup when email isn't set up, and when the reset link would point at localhost — so forgot-password can't silently do nothing.
+
+also re-checked the stuff that already passed the first time: the money math (86 tests, all passing), agents only ever seeing their own deals, logins surviving a server restart, and the pages staying fast with 201 agents and 2,015 deals in the database — everything answered in under 50ms and the leaderboard total matched the office total to the cent.
+
+still open before a real office uses it: pick the email that sends the password resets, and pick the domain. the per-ip rate limit, database hardening and the audit trail are still on the list as follow-ups, not blockers.
+
 ## importing deals, sorting the table, per-agent goals
 
 moving off a spreadsheet? on the Deals page there's an "Import deals from a CSV" form — pick a file and whose deals they are, and the server adds the good rows. the columns it wants are: address, price, commission %, side, status, closing date, city (optional). a row with a problem is skipped, not the whole file — it tells you which row and why, so you can fix the file and try again. agents can only import their own deals; the broker can import for anyone.
