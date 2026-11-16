@@ -35,6 +35,8 @@ cd server && npm install && npm start     # localhost:3001
 cd client && npm install && npm run dev   # localhost:5173
 ```
 
+once the frontend is built (`cd client && npm run build`), the api server serves the site itself too — that's how the real deploy runs, and the full steps are in DEPLOY.md.
+
 ## demo logins
 
 the seed script (`cd server && node seed.js`) makes a login for each sample agent, plus a broker login. they all use the password **demo1234** — it's the same for everyone because this is sample data, and the database only stores the password's hash, never the password itself. usernames: `sam`, `jess`, `dan`, `priya` (agents), `broker` (sees the whole office).
@@ -56,6 +58,8 @@ the broker has an Accounts page in the sidebar (agents never see it). from there
 two small limits keep the login safe: 10 wrong passwords for one login in 15 minutes gets a "try again in a few minutes" (a good login clears the count, so a typo doesn't count against you), and 5 reset requests for one email in an hour. there's also a per-address limit on top of those — 50 failed logins from one computer in 15 minutes, and 20 reset requests in an hour — so someone can't just try a different login every time and dodge the per-login limit. the per-address number is loose on purpose: a whole office behind one router shares an address, so it should only ever catch a real attack. they're counted in the server's memory — fine for one server.
 
 ## setting it up for a real office
+
+the full deploy steps — server, site, keeping it running — are in DEPLOY.md. the short version:
 
 the seed script is only for playing around — it wipes the whole database. a real office starts empty:
 

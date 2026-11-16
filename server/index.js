@@ -2,6 +2,8 @@
 // the routes here are the ones the frontend will call. the money math
 // lives in commission.js so every route gets the same numbers.
 const express = require('express')
+const fs = require('fs')
+const path = require('path')
 const db = require('./db')
 const { commission } = require('./commission')
 const { computeBadges, buildFeed } = require('./badges')
@@ -46,7 +48,9 @@ const {
 } = require('./roles')
 
 const app = express()
-const PORT = 3001
+// the port comes from the environment on a real server (the deploy
+// doc sets it) — 3001 is just the local default.
+const PORT = process.env.PORT || 3001
 
 // one proxy in front (nginx, in the deploy doc) — trust its
 // X-Forwarded-For so req.ip is the visitor's address, not the
@@ -54,6 +58,21 @@ const PORT = 3001
 app.set('trust proxy', 1)
 
 app.use(express.json())
+
+// the built site, when it's there: `npm run build` in client/ makes
+// client/dist, and this server hands it out itself — so one
+// `npm start` runs the whole app, api and pages together, on one
+// port. /api routes still win (the login check below only matches
+// those); anything else falls back to the app page and react's
+// router takes it from there. in dev there's no dist, so this just
+// stays quiet and vite serves the pages instead.
+const clientDist = path.join(__dirname, '..', 'client', 'dist')
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist))
+  app.get(/^\/(?!api).*/, (req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'))
+  })
+}
 
 // login part 2: every data route needs a token now. /api/login,
 // /api/logout, /api/me and /api/health stay open — everything else
