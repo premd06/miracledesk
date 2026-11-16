@@ -42,3 +42,24 @@ test('clearing a key forgets its failures', () => {
   limiter.hit('sam')
   assert.equal(limiter.isBlocked('sam'), true)
 })
+
+// the login route runs two limiters side by side — one per login,
+// one per ip — and they have to stay separate. sam failing twice
+// should trip the per-login one without touching the per-ip one,
+// and the ip one only trips on its own count.
+test('a per-login limiter and a per-ip limiter do not share counts', () => {
+  let now = 1000000
+  const perLogin = createLimiter(15 * 60 * 1000, 2, () => now)
+  const perIp = createLimiter(15 * 60 * 1000, 3, () => now)
+  perLogin.hit('sam')
+  perLogin.hit('sam')
+  assert.equal(perLogin.isBlocked('sam'), true)
+  assert.equal(perIp.isBlocked('10.0.0.1'), false)
+  perIp.hit('10.0.0.1')
+  perIp.hit('10.0.0.1')
+  assert.equal(perIp.isBlocked('10.0.0.1'), false)
+  perIp.hit('10.0.0.1')
+  assert.equal(perIp.isBlocked('10.0.0.1'), true)
+  // and the per-login limit still only blocks sam, not everyone
+  assert.equal(perLogin.isBlocked('jess'), false)
+})

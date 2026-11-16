@@ -28,6 +28,15 @@ const { createLimiter } = require('./rateLimit')
 // guessing at passwords shouldn't lock the whole office out.
 const loginLimiter = createLimiter(15 * 60 * 1000, 10)
 const forgotLimiter = createLimiter(60 * 60 * 1000, 5)
+// plus the same idea per address: 50 failed logins from one ip in
+// 15 minutes, and 20 reset requests from one ip in an hour. the
+// per-login limit stops someone hammering at one account; this one
+// stops someone working through every account from one computer.
+// 50 is loose on purpose — a whole office behind one router shares
+// an ip, so this should only ever catch a real attack, not a bad
+// morning of typos.
+const loginIpLimiter = createLimiter(15 * 60 * 1000, 50)
+const forgotIpLimiter = createLimiter(60 * 60 * 1000, 20)
 const { cleanDealUpdate } = require('./dealEdit')
 const { importDeals } = require('./csvImport')
 const {
@@ -38,6 +47,11 @@ const {
 
 const app = express()
 const PORT = 3001
+
+// one proxy in front (nginx, in the deploy doc) — trust its
+// X-Forwarded-For so req.ip is the visitor's address, not the
+// proxy's. that matters for the per-ip rate limits below.
+app.set('trust proxy', 1)
 
 app.use(express.json())
 
@@ -102,9 +116,17 @@ app.post('/api/login', (req, res) => {
       error: 'too many failed logins — try again in a few minutes',
     })
   }
+  // the ip limit catches someone trying a different login every
+  // time — the per-login limit above never sees that pattern.
+  if (loginIpLimiter.isBlocked(req.ip)) {
+    return res.status(429).json({
+      error: 'too many failed logins from this address — try again in a few minutes',
+    })
+  }
   const result = loginUser(db, body.username, body.password)
   if (!result) {
     loginLimiter.hit(loginKey)
+    loginIpLimiter.hit(req.ip)
     return res.status(401).json({ error: 'wrong username or password' })
   }
   loginLimiter.clear(loginKey)
@@ -122,13 +144,20 @@ app.post('/api/forgot-password', async (req, res) => {
   // 5 reset requests per email in an hour — otherwise anyone could
   // flood one person's inbox with reset emails. the limit counts
   // every request, real email or not, and the answer stays the same
-  // generic sentence either way.
+  // generic sentence either way. same again per ip, so one computer
+  // can't spray reset requests at every email in the office.
   if (forgotLimiter.isBlocked(emailKey)) {
     return res.status(429).json({
       error: 'too many reset requests for this email — try again later',
     })
   }
+  if (forgotIpLimiter.isBlocked(req.ip)) {
+    return res.status(429).json({
+      error: 'too many reset requests from this address — try again later',
+    })
+  }
   forgotLimiter.hit(emailKey)
+  forgotIpLimiter.hit(req.ip)
   const reset = requestPasswordReset(db, body.email)
   if (reset) {
     const base = (process.env.RESET_BASE_URL || 'http://localhost:5173').replace(

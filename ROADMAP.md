@@ -63,7 +63,7 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] logins that survive a restart: sessions live in the database, 30 days with a sliding expiry — closing the tab or restarting the server doesn't log anyone out, logging out kills just that one login
 - [x] broker accounts page: add an agent (name, username, email, starting password, split plan, yearly goal), see every account, reset anyone's password, turn an account off and back on
 - [x] change your own password from the sidebar — current password first
-- [x] rate limits: 10 failed logins per login in 15 minutes, 5 reset requests per email in an hour
+- [x] rate limits: 10 failed logins per login in 15 minutes, 5 reset requests per email in an hour, plus a per-ip limit (50 failed logins / 20 reset requests) so one computer can't work through every account
 - [x] pilot fixes: first-broker setup script (the seed script is never the setup path), closed deals need a closing date, split plans + numbers get checked before they can break the office totals, changing your password logs your other devices out, no demo notes on the login screen / sidebar / TV board / income report, and the server warns on startup when email isn't set up
 - [x] re-audit before the pilot (nov 13): re-ran all six blocker checks + the stuff that already passed, live — verdict is ready, the pilot is only waiting on the email + domain picks. the note's in the readme.
 

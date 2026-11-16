@@ -53,7 +53,7 @@ once you're logged in, you stay logged in. logins live in the database (the sess
 
 the broker has an Accounts page in the sidebar (agents never see it). from there the broker can add a new agent (name, username, email, starting password, split plan, yearly goal), see every account in the office, reset anyone's password, and turn an account off and back on. turning an account off logs them out everywhere on the spot and they can't log back in until it's turned back on. the broker can't turn off their own account, and can't reset their own password from that page — everyone changes their own password from the "Change password" button in the sidebar, current password first.
 
-two small limits keep the login safe: 10 wrong passwords for one login in 15 minutes gets a "try again in a few minutes" (a good login clears the count, so a typo doesn't count against you), and 5 reset requests for one email in an hour. they're counted in the server's memory — fine for one server.
+two small limits keep the login safe: 10 wrong passwords for one login in 15 minutes gets a "try again in a few minutes" (a good login clears the count, so a typo doesn't count against you), and 5 reset requests for one email in an hour. there's also a per-address limit on top of those — 50 failed logins from one computer in 15 minutes, and 20 reset requests in an hour — so someone can't just try a different login every time and dodge the per-login limit. the per-address number is loose on purpose: a whole office behind one router shares an address, so it should only ever catch a real attack. they're counted in the server's memory — fine for one server.
 
 ## setting it up for a real office
 
@@ -78,7 +78,7 @@ the first full check (nov 12) found six things that had to be fixed before a rea
 
 also re-checked the stuff that already passed the first time: the money math (86 tests, all passing), agents only ever seeing their own deals, logins surviving a server restart, and the pages staying fast with 201 agents and 2,015 deals in the database — everything answered in under 50ms and the leaderboard total matched the office total to the cent.
 
-still open before a real office uses it: pick the email that sends the password resets, and pick the domain. the per-ip rate limit, database hardening and the audit trail are still on the list as follow-ups, not blockers.
+still open before a real office uses it: pick the email that sends the password resets, and pick the domain. database hardening and the audit trail are still on the list as follow-ups, not blockers.
 
 ## importing deals, sorting the table, per-agent goals
 
