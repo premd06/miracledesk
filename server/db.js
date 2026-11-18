@@ -8,6 +8,25 @@ const path = require('path')
 
 const db = new DatabaseSync(path.join(__dirname, 'miracledesk.db'))
 
+// make the database a bit tougher before anything else touches it.
+// sqlite keeps foreign keys off unless you ask, so the REFERENCES in
+// the tables below were just decoration until now — a deal could
+// point at an agent that doesn't exist and nothing would complain.
+// WAL mode means readers don't block writers (and a crash mid-write
+// is less likely to leave a half-written file), and the busy timeout
+// makes a second writer wait 5 seconds for its turn instead of
+// failing straight away — that matters once the server and a backup
+// (or the setup script) touch the file at the same time. it's a
+// function so the tests can run it against a throwaway database
+// instead of the real one.
+function applyPragmas(database) {
+  database.exec('PRAGMA journal_mode = WAL')
+  database.exec('PRAGMA busy_timeout = 5000')
+  database.exec('PRAGMA foreign_keys = ON')
+}
+
+applyPragmas(db)
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS agents (
     id INTEGER PRIMARY KEY,
@@ -122,3 +141,4 @@ if (!userColumns.includes('active')) {
 }
 
 module.exports = db
+module.exports.applyPragmas = applyPragmas

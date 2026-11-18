@@ -72,5 +72,7 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] import deals from a csv (offices already have spreadsheets — nobody's re-typing history): upload on the Deals page, bad rows are skipped and reported back with a reason instead of killing the whole import
 - [x] sort the deals table by address, price, net or closing date — click a header to sort, click it again to flip it
 - [x] per-agent goals: the broker sets each agent's yearly goal from the Accounts page, the leaderboard shows each agent against their own goal, and an agent's dashboard goal bar uses their own goal (the office goal is everyone's added up)
+- [x] database hardening: WAL mode, a 5-second busy timeout and foreign keys actually switched on — a crash or two writers at once won't corrupt the office's data, and a deal can't point at an agent that doesn't exist
+- [x] the server says so on startup when the built site hasn't been built yet — "run npm run build in client/ first" instead of the pages just 404ing
 - [ ] phone app feel (pwa) — installable, no app store
 - [ ] deploy the demo (sample data) + screenshots in the readme

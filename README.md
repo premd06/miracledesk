@@ -82,7 +82,7 @@ the first full check (nov 12) found six things that had to be fixed before a rea
 
 also re-checked the stuff that already passed the first time: the money math (86 tests, all passing), agents only ever seeing their own deals, logins surviving a server restart, and the pages staying fast with 201 agents and 2,015 deals in the database — everything answered in under 50ms and the leaderboard total matched the office total to the cent.
 
-still open before a real office uses it: pick the email that sends the password resets, and pick the domain. database hardening and the audit trail are still on the list as follow-ups, not blockers.
+still open before a real office uses it: pick the email that sends the password resets, and pick the domain. the database is hardened now (WAL mode, busy timeout, foreign keys on) — the audit trail is still on the list as a follow-up, not a blocker.
 
 ## importing deals, sorting the table, per-agent goals
 

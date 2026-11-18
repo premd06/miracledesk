@@ -64,14 +64,20 @@ app.use(express.json())
 // `npm start` runs the whole app, api and pages together, on one
 // port. /api routes still win (the login check below only matches
 // those); anything else falls back to the app page and react's
-// router takes it from there. in dev there's no dist, so this just
-// stays quiet and vite serves the pages instead.
+// router takes it from there. when there's no dist, `npm start` on
+// its own only serves the api and the pages just 404 — so say so
+// plainly on startup instead of leaving someone staring at a blank
+// page. (in dev this is normal — vite serves the pages instead.)
 const clientDist = path.join(__dirname, '..', 'client', 'dist')
 if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist))
   app.get(/^\/(?!api).*/, (req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'))
   })
+} else {
+  console.log(
+    'the built site is missing — run `npm run build` in client/ first, or the pages will 404 (the api still works)'
+  )
 }
 
 // login part 2: every data route needs a token now. /api/login,
