@@ -103,7 +103,7 @@ cd ../server && npm install
 sudo systemctl restart miracledesk
 ```
 
-the database is just `server/miracledesk.db` — it stays put through updates, nothing in it gets touched. never run `node seed.js` against a real office's database: it wipes every deal, client, account and login in it. until the proper backup story is in place, copy `miracledesk.db` somewhere safe before an update.
+the database is just `server/miracledesk.db` — it stays put through updates, nothing in it gets touched. never run `node seed.js` against a real office's database: it wipes every deal, client, account and login in it. for backups, the broker can hit "Download a backup" on the Broker view page — that downloads a clean copy of the whole database (deals, clients, accounts, the audit trail, everything). grab one every week or so and keep it somewhere safe. if the server ever dies, that file is the office: put it back as `server/miracledesk.db` and start the server.
 
 ## if something's wrong
 

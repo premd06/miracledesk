@@ -276,7 +276,7 @@ function App() {
           </>
         )}
 
-        {page === 'Broker view' && <BrokerView />}
+        {page === 'Broker view' && <BrokerView user={user} />}
 
         {page === 'Accounts' && <AccountsPage />}
 

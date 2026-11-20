@@ -95,6 +95,13 @@ db.exec(`
     expires_at INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users (id)
   );
+  CREATE TABLE IF NOT EXISTS audit_log (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER,
+    action TEXT NOT NULL,
+    detail TEXT,
+    created_at TEXT NOT NULL
+  );
 `)
 
 // the deals table started without a condition deadline column, so add

@@ -82,7 +82,7 @@ the first full check (nov 12) found six things that had to be fixed before a rea
 
 also re-checked the stuff that already passed the first time: the money math (86 tests, all passing), agents only ever seeing their own deals, logins surviving a server restart, and the pages staying fast with 201 agents and 2,015 deals in the database — everything answered in under 50ms and the leaderboard total matched the office total to the cent.
 
-still open before a real office uses it: pick the email that sends the password resets, and pick the domain. the database is hardened now (WAL mode, busy timeout, foreign keys on) — the audit trail is still on the list as a follow-up, not a blocker.
+still open before a real office uses it: pick the email that sends the password resets, and pick the domain. the database is hardened now (WAL mode, busy timeout, foreign keys on), and there's an audit trail: every deal, client and account change is logged, and the broker can read it on the Broker view page and download a copy of the database as a backup.
 
 ## importing deals, sorting the table, per-agent goals
 

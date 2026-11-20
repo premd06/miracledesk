@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiFetch } from './api'
 import PulseFeed from './PulseFeed'
+import AuditTrail from './AuditTrail'
 
 // the broker's office page: office totals, every agent ranked by net,
 // and what's closing this month. pulls from the leaderboard, summary
@@ -9,7 +10,7 @@ function money(n) {
   return '$' + Math.round(n).toLocaleString()
 }
 
-function BrokerView() {
+function BrokerView({ user }) {
   const [leaders, setLeaders] = useState(null)
   const [summary, setSummary] = useState(null)
   const [deals, setDeals] = useState(null)
@@ -161,6 +162,13 @@ function BrokerView() {
           </div>
         )}
       </section>
+
+      {user && user.role === 'broker' && (
+        <section className="deals-section">
+          <p className="section-label">Audit trail</p>
+          <AuditTrail />
+        </section>
+      )}
     </>
   )
 }

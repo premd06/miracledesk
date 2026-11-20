@@ -3,6 +3,7 @@
 // lives in commission.js so every route gets the same numbers.
 const express = require('express')
 const fs = require('fs')
+const os = require('os')
 const path = require('path')
 const db = require('./db')
 const { commission } = require('./commission')
@@ -41,6 +42,8 @@ const loginIpLimiter = createLimiter(15 * 60 * 1000, 50)
 const forgotIpLimiter = createLimiter(60 * 60 * 1000, 20)
 const { cleanDealUpdate } = require('./dealEdit')
 const { importDeals } = require('./csvImport')
+const { logAudit, listAudit } = require('./audit')
+const { cleanupExpired } = require('./cleanup')
 const {
   visibleAgentId,
   canCreateFor,
@@ -269,6 +272,7 @@ app.post('/api/accounts', (req, res) => {
   if (result.error) {
     return res.status(400).json({ error: result.error })
   }
+  logAudit(db, req.user.id, 'account added', result.account.username)
   res.status(201).json(result.account)
 })
 
@@ -290,6 +294,15 @@ app.post('/api/accounts/:id/reset-password', (req, res) => {
   if (result.error) {
     return res.status(400).json({ error: result.error })
   }
+  const account = db
+    .prepare('SELECT username FROM users WHERE id = ?')
+    .get(userId)
+  logAudit(
+    db,
+    req.user.id,
+    'password reset',
+    account ? account.username : `account ${userId}`
+  )
   res.json({ ok: true })
 })
 
@@ -311,6 +324,15 @@ app.post('/api/accounts/:id/active', (req, res) => {
   if (result.error) {
     return res.status(400).json({ error: result.error })
   }
+  const account = db
+    .prepare('SELECT username FROM users WHERE id = ?')
+    .get(userId)
+  logAudit(
+    db,
+    req.user.id,
+    (req.body || {}).active ? 'account reactivated' : 'account deactivated',
+    account ? account.username : `account ${userId}`
+  )
   res.json({ ok: true })
 })
 
@@ -329,7 +351,57 @@ app.patch('/api/agents/:id/goal', (req, res) => {
   if (result.error) {
     return res.status(400).json({ error: result.error })
   }
+  logAudit(
+    db,
+    req.user.id,
+    'goal changed',
+    `${result.agent.name} — yearly goal now $${Number(
+      result.agent.yearly_goal
+    ).toLocaleString()}`
+  )
   res.json(result.agent)
+})
+
+// the audit trail: who changed what, newest first. broker only —
+// this is the office's record, not something an agent needs to see
+// about anyone else.
+app.get('/api/audit', (req, res) => {
+  if (!requireBroker(req, res)) {
+    return
+  }
+  res.json(listAudit(db, 100))
+})
+
+// download a copy of the whole database. broker only — this file has
+// everyone's deals and money in it, so it never goes to an agent.
+// VACUUM INTO writes a clean, consistent copy to a temp file first
+// (the live file can be mid-write, and with WAL mode the newest rows
+// might still be sitting in the -wal sidecar), then I send that copy
+// and delete it. the office should grab one every week or so and keep
+// it somewhere safe — if the server ever dies, this copy is the office.
+app.get('/api/backup', (req, res) => {
+  if (!requireBroker(req, res)) {
+    return
+  }
+  const stamp = new Date().toISOString().slice(0, 10)
+  const file = path.join(
+    os.tmpdir(),
+    `miracledesk-backup-${Date.now()}.db`
+  )
+  try {
+    db.exec(`VACUUM INTO '${file.replace(/'/g, "''")}'`)
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ error: 'could not make a backup right now' })
+  }
+  res.download(file, `miracledesk-backup-${stamp}.db`, () => {
+    try {
+      fs.unlinkSync(file)
+    } catch (e) {
+      // already gone — nothing to clean up
+    }
+  })
 })
 
 // change your own password: the current one has to be right, and
@@ -350,6 +422,7 @@ app.post('/api/change-password', (req, res) => {
   }
   const token = (req.headers.authorization || '').replace('Bearer ', '')
   logoutOthers(db, req.user.id, token)
+  logAudit(db, req.user.id, 'password changed', req.user.name)
   res.json({ ok: true })
 })
 
@@ -690,6 +763,7 @@ app.post('/api/clients', (req, res) => {
       body.last_contacted || null
     )
 
+  logAudit(db, req.user.id, 'client added', body.name)
   res
     .status(201)
     .json(
@@ -1020,6 +1094,7 @@ app.post('/api/deals', (req, res) => {
   // run the whole list through the math so a tiered split counts the
   // deals before this one, then pick the new deal out of it.
   const created = dealsWithMath().find((deal) => deal.id === result.lastInsertRowid)
+  logAudit(db, req.user.id, 'deal added', body.address)
   res.status(201).json(created)
 })
 
@@ -1055,6 +1130,14 @@ app.post('/api/deals/import', (req, res) => {
   const imported = dealsWithMath().filter((deal) =>
     result.importedIds.includes(deal.id)
   )
+  if (imported.length > 0) {
+    logAudit(
+      db,
+      req.user.id,
+      'deals imported',
+      `${imported.length} deal(s) from a csv`
+    )
+  }
   res.status(201).json({ imported, skipped: result.skipped })
 })
 
@@ -1100,6 +1183,19 @@ app.patch('/api/deals/:id', (req, res) => {
     deal.id
   )
 
+  // what actually changed, in plain words — "price: 900000 → 1000000"
+  // beats a bare "deal edited" when the broker is wondering why the
+  // numbers moved. fields that didn't change aren't listed.
+  const changes = Object.keys(updates)
+    .filter((field) => updates[field] !== deal[field])
+    .map((field) => `${field}: ${deal[field] ?? '—'} → ${updates[field] ?? '—'}`)
+  logAudit(
+    db,
+    req.user.id,
+    'deal edited',
+    `${deal.address} — ${changes.join(', ') || 'no change'}`
+  )
+
   const updated = dealsWithMath().find((row) => row.id === deal.id)
   res.json(updated)
 })
@@ -1120,11 +1216,24 @@ app.delete('/api/deals/:id', (req, res) => {
 
   db.prepare('DELETE FROM checklist_items WHERE deal_id = ?').run(deal.id)
   db.prepare('DELETE FROM deals WHERE id = ?').run(deal.id)
+  logAudit(db, req.user.id, 'deal deleted', deal.address)
   res.json({ ok: true })
 })
 
 function round(n) {
   return Math.round(n * 100) / 100
+}
+
+// sessions and password-reset rows pile up and nothing ever deleted
+// them — my own test logins left rows behind until I cleared them by
+// hand. so the server clears the dead ones out when it starts: a
+// session past its 30 days, or a reset token that's expired or
+// already used. live logins are untouched.
+const cleaned = cleanupExpired(db)
+if (cleaned.sessions + cleaned.resets > 0) {
+  console.log(
+    `cleaned up ${cleaned.sessions} old session(s) and ${cleaned.resets} old password-reset row(s)`
+  )
 }
 
 app.listen(PORT, () => {
