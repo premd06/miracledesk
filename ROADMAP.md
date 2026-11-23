@@ -68,7 +68,7 @@ professional, like something an office would actually use. clean tables, numbers
 - [x] re-audit before the pilot (nov 13): re-ran all six blocker checks + the stuff that already passed, live — verdict is ready, the pilot is only waiting on the email + domain picks. the note's in the readme.
 - [x] deploy steps written down (DEPLOY.md): env vars, first-broker setup, starting it and keeping it running — and the server serves the built site itself, so one `npm start` runs the whole app
 - [x] audit trail + backup: every deal, client and account change is written to a log the broker can read on the Broker view page, and the broker can download a copy of the database as a backup from the same page
-- [x] startup cleanup: old sessions and used-up password-reset rows get deleted when the server starts, so the tables don't fill up with dead logins
+- [x] startup cleanup: old sessions and used-up password-reset rows get deleted when the server starts, so the tables don't fill up with dead logins — and audit rows older than a year get cleared the same way, so the log stays a record of recent changes
 
 ## later
 - [x] import deals from a csv (offices already have spreadsheets — nobody's re-typing history): upload on the Deals page, bad rows are skipped and reported back with a reason instead of killing the whole import

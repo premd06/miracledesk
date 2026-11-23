@@ -17,6 +17,7 @@ function BrokerView({ user }) {
   const [failed, setFailed] = useState(false)
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+  const [exportError, setExportError] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -59,8 +60,35 @@ function BrokerView({ user }) {
   if (from) exportParams.set('from', from)
   if (to) exportParams.set('to', to)
   const exportQuery = exportParams.toString()
-  const exportHref =
-    '/api/export/payperiod' + (exportQuery ? '?' + exportQuery : '')
+
+  // the download goes through apiFetch (not a plain link) so the
+  // login token rides along — a plain <a href> just gets a 401 now
+  // that the api needs a login. same trick as the backup button.
+  function downloadExport() {
+    setExportError(false)
+    apiFetch(
+      '/api/export/payperiod' + (exportQuery ? '?' + exportQuery : '')
+    )
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('export failed')
+        }
+        const name =
+          res.headers
+            .get('Content-Disposition')
+            ?.match(/filename="([^"]+)"/)?.[1] || 'payperiod.csv'
+        return res.blob().then((blob) => ({ blob, name }))
+      })
+      .then(({ blob, name }) => {
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = name
+        link.click()
+        URL.revokeObjectURL(url)
+      })
+      .catch(() => setExportError(true))
+  }
 
   return (
     <>
@@ -109,10 +137,15 @@ function BrokerView({ user }) {
               onChange={(e) => setTo(e.target.value)}
             />
           </label>
-          <a href={exportHref} download>
+          <button type="button" onClick={downloadExport}>
             Download CSV
-          </a>
+          </button>
         </div>
+        {exportError && (
+          <p className="table-note">
+            The export didn&apos;t download — try again in a minute.
+          </p>
+        )}
       </section>
 
       <section className="deals-section">

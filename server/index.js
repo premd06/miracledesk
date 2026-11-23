@@ -1228,11 +1228,12 @@ function round(n) {
 // them — my own test logins left rows behind until I cleared them by
 // hand. so the server clears the dead ones out when it starts: a
 // session past its 30 days, or a reset token that's expired or
-// already used. live logins are untouched.
+// already used. audit rows older than a year go too. live logins
+// are untouched.
 const cleaned = cleanupExpired(db)
-if (cleaned.sessions + cleaned.resets > 0) {
+if (cleaned.sessions + cleaned.resets + cleaned.audit > 0) {
   console.log(
-    `cleaned up ${cleaned.sessions} old session(s) and ${cleaned.resets} old password-reset row(s)`
+    `cleaned up ${cleaned.sessions} old session(s), ${cleaned.resets} old password-reset row(s) and ${cleaned.audit} old audit row(s)`
   )
 }
 
