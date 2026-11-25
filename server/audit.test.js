@@ -49,6 +49,17 @@ test('newest first, and the limit is respected', () => {
   assert.equal(rows[1].detail, 'second')
 })
 
+test('an offset skips the newest entries, so the page can load more', () => {
+  const db = testDb()
+  logAudit(db, 1, 'deal added', 'first')
+  logAudit(db, 1, 'deal edited', 'second')
+  logAudit(db, 1, 'deal deleted', 'third')
+  const rows = listAudit(db, 2, 1)
+  assert.equal(rows.length, 2)
+  assert.equal(rows[0].detail, 'second')
+  assert.equal(rows[1].detail, 'first')
+})
+
 test('an entry for a missing user still lists, with no username', () => {
   const db = testDb()
   logAudit(db, 99, 'deal added', '12 Fake St, Brampton')

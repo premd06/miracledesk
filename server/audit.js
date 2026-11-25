@@ -11,17 +11,18 @@ function logAudit(db, userId, action, detail) {
   ).run(userId, action, detail || null, new Date().toISOString())
 }
 
-// the newest entries first, 100 at a time — plenty for a quick look
-// back, and it keeps the page fast. each row carries the username of
+// the newest entries first, 100 at a time, with an offset so the
+// broker can page back past the first 100 — a busy office writes
+// more than 100 entries in a year. each row carries the username of
 // whoever did it, or nothing when that account is gone.
-function listAudit(db, limit) {
+function listAudit(db, limit, offset) {
   return db
     .prepare(
       `SELECT audit_log.*, users.username
        FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id
-       ORDER BY audit_log.id DESC LIMIT ?`
+       ORDER BY audit_log.id DESC LIMIT ? OFFSET ?`
     )
-    .all(limit || 100)
+    .all(limit || 100, offset || 0)
 }
 
 module.exports = { logAudit, listAudit }

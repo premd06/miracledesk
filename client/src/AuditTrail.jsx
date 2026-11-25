@@ -9,13 +9,36 @@ function AuditTrail() {
   const [entries, setEntries] = useState(null)
   const [failed, setFailed] = useState(false)
   const [backupError, setBackupError] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [moreError, setMoreError] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
 
   useEffect(() => {
     apiFetch('/api/audit')
       .then((res) => res.json())
-      .then((data) => setEntries(data))
+      .then((data) => {
+        setEntries(data)
+        setHasMore(data.length === 100)
+      })
       .catch(() => setFailed(true))
   }, [])
+
+  // older entries come back 100 at a time, newest first — this just
+  // tacks the next page onto the list. the button goes away once a
+  // page comes back short, because that means we've seen them all.
+  function loadOlder() {
+    if (!entries || loadingMore) return
+    setLoadingMore(true)
+    setMoreError(false)
+    apiFetch('/api/audit?offset=' + entries.length)
+      .then((res) => res.json())
+      .then((data) => {
+        setEntries([...entries, ...data])
+        setHasMore(data.length === 100)
+      })
+      .catch(() => setMoreError(true))
+      .finally(() => setLoadingMore(false))
+  }
 
   // the backup goes through apiFetch (not a plain link) so the login
   // token rides along — a plain <a href> would just get a 401.
@@ -89,6 +112,18 @@ function AuditTrail() {
             </div>
           ))}
         </div>
+      )}
+      {hasMore && entries.length > 0 && (
+        <div className="export-row">
+          <button type="button" onClick={loadOlder} disabled={loadingMore}>
+            {loadingMore ? 'Loading…' : 'Show older entries'}
+          </button>
+        </div>
+      )}
+      {moreError && (
+        <p className="table-note">
+          Couldn&apos;t load the older entries — try again in a minute.
+        </p>
       )}
     </>
   )

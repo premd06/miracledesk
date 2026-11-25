@@ -369,7 +369,8 @@ app.get('/api/audit', (req, res) => {
   if (!requireBroker(req, res)) {
     return
   }
-  res.json(listAudit(db, 100))
+  const offset = Math.max(0, parseInt(req.query.offset, 10) || 0)
+  res.json(listAudit(db, 100, offset))
 })
 
 // download a copy of the whole database. broker only — this file has
@@ -918,10 +919,27 @@ app.get('/api/export/payperiod', (req, res) => {
   res.setHeader('Content-Type', 'text/csv')
   res.setHeader(
     'Content-Disposition',
-    'attachment; filename="payperiod.csv"'
+    'attachment; filename="' + exportFileName(from, to) + '"'
   )
   res.send(csv)
 })
+
+// the file name carries the date range, so two exports from different
+// months don't overwrite each other in the downloads folder. no range
+// means everything, so the name just carries today's date instead.
+function exportFileName(from, to) {
+  const clean = (value) => String(value || '').replace(/[^0-9-]/g, '')
+  if (from && to) {
+    return 'payperiod-' + clean(from) + '-to-' + clean(to) + '.csv'
+  }
+  if (from) {
+    return 'payperiod-from-' + clean(from) + '.csv'
+  }
+  if (to) {
+    return 'payperiod-to-' + clean(to) + '.csv'
+  }
+  return 'payperiod-' + new Date().toISOString().slice(0, 10) + '.csv'
+}
 
 // one csv cell: wrap it in quotes if it has a comma, quote or newline
 // in it, and double up any quotes inside.

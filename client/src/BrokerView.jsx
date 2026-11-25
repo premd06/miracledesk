@@ -18,6 +18,7 @@ function BrokerView({ user }) {
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [exportError, setExportError] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -64,7 +65,11 @@ function BrokerView({ user }) {
   // the download goes through apiFetch (not a plain link) so the
   // login token rides along — a plain <a href> just gets a 401 now
   // that the api needs a login. same trick as the backup button.
+  // the button stays disabled until the file lands, so a double
+  // click can't fire two downloads.
   function downloadExport() {
+    if (exporting) return
+    setExporting(true)
     setExportError(false)
     apiFetch(
       '/api/export/payperiod' + (exportQuery ? '?' + exportQuery : '')
@@ -88,6 +93,7 @@ function BrokerView({ user }) {
         URL.revokeObjectURL(url)
       })
       .catch(() => setExportError(true))
+      .finally(() => setExporting(false))
   }
 
   return (
@@ -137,8 +143,12 @@ function BrokerView({ user }) {
               onChange={(e) => setTo(e.target.value)}
             />
           </label>
-          <button type="button" onClick={downloadExport}>
-            Download CSV
+          <button
+            type="button"
+            onClick={downloadExport}
+            disabled={exporting}
+          >
+            {exporting ? 'Downloading…' : 'Download CSV'}
           </button>
         </div>
         {exportError && (
