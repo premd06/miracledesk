@@ -9,6 +9,7 @@ function AuditTrail() {
   const [entries, setEntries] = useState(null)
   const [failed, setFailed] = useState(false)
   const [backupError, setBackupError] = useState(false)
+  const [downloadingBackup, setDownloadingBackup] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [moreError, setMoreError] = useState(false)
   const [hasMore, setHasMore] = useState(true)
@@ -42,7 +43,11 @@ function AuditTrail() {
 
   // the backup goes through apiFetch (not a plain link) so the login
   // token rides along — a plain <a href> would just get a 401.
+  // the button locks while the file is coming down, same as the csv
+  // export — a double-click used to fire two downloads.
   function downloadBackup() {
+    if (downloadingBackup) return
+    setDownloadingBackup(true)
     setBackupError(false)
     apiFetch('/api/backup')
       .then((res) => {
@@ -64,6 +69,7 @@ function AuditTrail() {
         URL.revokeObjectURL(url)
       })
       .catch(() => setBackupError(true))
+      .finally(() => setDownloadingBackup(false))
   }
 
   if (failed) {
@@ -87,8 +93,12 @@ function AuditTrail() {
         office.
       </p>
       <div className="export-row">
-        <button type="button" onClick={downloadBackup}>
-          Download a backup
+        <button
+          type="button"
+          onClick={downloadBackup}
+          disabled={downloadingBackup}
+        >
+          {downloadingBackup ? 'Downloading…' : 'Download a backup'}
         </button>
       </div>
       {backupError && (
